@@ -1,0 +1,30 @@
+{
+  "name": "drillsergeant-api",
+  "version": "0.1.0",
+  "description": "DrillSergeant Backend API",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main",
+    "start:dev": "nest start --watch",
+    "gen:openapi": "node -e \"console.log('OpenAPI generated in main.ts bootstrap')\""
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/static": "^7.0.4",
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/core": "^10.3.0",
+    "@nestjs/platform-fastify": "^10.3.0",
+    "@nestjs/swagger": "^7.2.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "fastify": "^4.25.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.3.0",
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
+}

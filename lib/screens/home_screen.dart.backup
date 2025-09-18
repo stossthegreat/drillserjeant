@@ -1,0 +1,432 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+import '../design/glass.dart';
+import '../design/tokens.dart';
+import '../badges/rank_ribbon.dart';
+import '../widgets/bg_orbs.dart';
+import '../widgets/mission_card.dart';
+import '../widgets/interception_card.dart';
+import '../services/api_client.dart';
+import '../design/feedback.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  bool isLoading = true;
+  Map<String, dynamic>? briefData;
+  Timer? _refreshTimer;
+  
+  // Battle Timer (25/5 Pomodoro)
+  Timer? _battleTimer;
+  int _battleSeconds = 0;
+  bool _isBattleActive = false;
+  bool _isBreakTime = false;
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _loadBrief();
+    
+    // Auto-refresh every 2 minutes
+    _refreshTimer = Timer.periodic(const Duration(minutes: 2), (_) => _loadBrief());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _battleTimer?.cancel();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _loadBrief() async {
+    setState(() { isLoading = true; });
+    
+    try {
+      // Set auth token (in production this would come from authentication)
+      apiClient.setAuthToken('valid-token');
+      
+      final brief = await apiClient.getBriefToday();
+      
+      setState(() {
+        briefData = brief;
+        isLoading = false;
+      });
+      
+      print('✅ Brief loaded: ${brief['user']['rank']} with ${brief['achievements']['total']} achievements');
+      
+    } catch (e) {
+      print('❌ Failed to load brief: $e');
+      setState(() { isLoading = false; });
+      Toast.show(context, 'Failed to load data: $e');
+    }
+  }
+
+  void _startBattleTimer({bool isBreak = false}) {
+    final duration = isBreak ? 5 * 60 : 25 * 60; // 5 min break or 25 min work
+    
+    setState(() {
+      _battleSeconds = duration;
+      _isBattleActive = true;
+      _isBreakTime = isBreak;
+    });
+    
+    _battleTimer?.cancel();
+    _battleTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_battleSeconds > 0) {
+          _battleSeconds--;
+        } else {
+          _isBattleActive = false;
+          timer.cancel();
+          
+          // Show completion and suggest next action
+          _showBattleComplete();
+        }
+      });
+    });
+  }
+
+  void _stopBattleTimer() {
+    setState(() {
+      _isBattleActive = false;
+      _battleSeconds = 0;
+    });
+    _battleTimer?.cancel();
+  }
+
+  void _showBattleComplete() {
+    final message = _isBreakTime 
+        ? "Break complete! Ready for another battle session?"
+        : "Battle session complete! Time for a 5-minute break.";
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: DSXColors.base,
+        title: Row(
+          children: [
+            Icon(Icons.military_tech, color: DSXColors.accent, size: 28),
+            const SizedBox(width: 8),
+            Text(_isBreakTime ? "Break Complete!" : "Battle Complete!"),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          if (!_isBreakTime)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startBattleTimer(isBreak: true);
+              },
+              child: const Text('Start Break'),
+            ),
+          if (_isBreakTime)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _startBattleTimer(isBreak: false);
+              },
+              child: const Text('Start Work'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Dismiss'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatBattleTime(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading && briefData == null) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            const BgOrbs(),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ),
+      );
+    }
+
+    final user = briefData?['user'] ?? {};
+    final habits = briefData?['habits'] ?? [];
+    final achievements = briefData?['achievements'] ?? {};
+    final streaks = briefData?['streaks'] ?? {};
+    final missions = briefData?['missions'] ?? [];
+    final celebrationReady = briefData?['celebrationReady'] ?? false;
+
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: () async => _loadBrief(),
+        child: Stack(
+          children: [
+            const BgOrbs(),
+            
+            ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const SizedBox(height: 40),
+                
+                // Header with rank and XP
+                Row(
+                  children: [
+                    RankRibbon(text: user['rank'] ?? 'Sergeant'),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'XP: ${user['xp'] ?? 0}',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: DSXColors.accent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Level ${user['level'] ?? 1}',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Achievement celebration banner
+                if (celebrationReady)
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: 1.0 + (_pulseController.value * 0.05),
+                        child: GlassBanner(
+                          text: "🎉 Achievement Unlocked! Tap to celebrate!",
+                          color: Colors.amber,
+                        ),
+                      );
+                    },
+                  ),
+                
+                if (celebrationReady) const SizedBox(height: 16),
+                
+                // Stats overview
+                GradientGlassCard(
+                  colors: [Colors.blue.withOpacity(0.3), Colors.purple.withOpacity(0.3)],
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.trending_up, color: DSXColors.accent, size: 24),
+                            const SizedBox(width: 8),
+                            Text('Battle Status', style: Theme.of(context).textTheme.titleLarge),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem('Achievements', '${achievements['total'] ?? 0}', Icons.emoji_events),
+                            _buildStatItem('Longest Streak', '${streaks['longest'] ?? 0}d', Icons.local_fire_department),
+                            _buildStatItem('Active Habits', '${streaks['active'] ?? 0}/${streaks['total'] ?? 0}', Icons.check_circle),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Battle Timer
+                GlassCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              _isBattleActive ? Icons.timer : Icons.play_circle,
+                              color: _isBattleActive ? DSXColors.accent : DSXColors.textSecondary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isBattleActive 
+                                ? (_isBreakTime ? 'Break Time' : 'Battle Session')
+                                : 'Battle Timer',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const Spacer(),
+                            if (_isBattleActive)
+                              Text(
+                                _formatBattleTime(_battleSeconds),
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  color: DSXColors.accent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        Row(
+                          children: [
+                            if (!_isBattleActive) ...[
+                              Expanded(
+                                child: GlassButton.primary('25 Min Focus', onPressed: () => _startBattleTimer()),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: GlassButton.ghost('5 Min Break', onPressed: () => _startBattleTimer(isBreak: true)),
+                              ),
+                            ] else ...[
+                              Expanded(
+                                child: GlassButton.danger('Stop Timer', onPressed: _stopBattleTimer),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Missions section
+                if (missions.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(Icons.assignment, color: DSXColors.accent, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Active Missions', style: Theme.of(context).textTheme.titleLarge),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  ...missions.take(3).map<Widget>((mission) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: MissionCard(
+                      note: mission["description"] ?? '',
+                      title: mission["title"] ?? "Unknown Mission",
+                      rewardXp: mission["xpReward"] ?? 50,
+                    ),
+                  )).toList(),
+                  
+                  const SizedBox(height: 20),
+                ],
+                
+                // Quick Actions
+                Row(
+                  children: [
+                    Icon(Icons.flash_on, color: DSXColors.accent, size: 20),
+                    const SizedBox(width: 8),
+                    Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                Row(
+                  children: [
+                    Expanded(
+                      child: GlassButton.primary('View Habits', onPressed: () {
+                        // Navigate to habits screen
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GlassButton.ghost('Chat', onPressed: () {
+                        // Navigate to chat screen
+                      }),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Interception status (if applicable)
+                if (briefData?['antiHabits'] != null && (briefData!['antiHabits'] as List).isNotEmpty)
+                  InterceptionCard(
+                    enabled: true,
+                    onToggle: () {},
+                    title: "Anti-Habit Interception",
+                    subtitle: "Clean for 5 days",
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: DSXColors.accent, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: DSXColors.accent,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  void _executeMission(Map<String, dynamic> mission) async {
+    final action = mission['action'];
+    final habitId = mission['habitId'];
+    
+    if (action == 'tick_habit' && habitId != null) {
+      try {
+        final result = await apiClient.tickHabit(habitId);
+        
+        if (result['achievements'] != null && (result['achievements'] as List).isNotEmpty) {
+          Toast.show(context, '🎉 Achievement unlocked! ${result['streak']} day streak!');
+        } else {
+          Toast.show(context, '✅ Mission complete! Streak: ${result['streak']} days');
+        }
+        
+        // Refresh the brief to show updated data
+        _loadBrief();
+        
+      } catch (e) {
+        Toast.show(context, 'Mission failed: $e');
+      }
+    }
+}

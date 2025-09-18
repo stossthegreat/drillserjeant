@@ -1,0 +1,502 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/users/me": {
+      "get": {
+        "operationId": "UsersController_getMe",
+        "summary": "Get current user profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved"
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updateMe",
+        "summary": "Update user profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User profile updated"
+          }
+        },
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/habits": {
+      "get": {
+        "operationId": "HabitsController_list",
+        "summary": "List user habits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Habits retrieved"
+          }
+        },
+        "tags": [
+          "Habits"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "HabitsController_create",
+        "summary": "Create new habit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Habit created"
+          }
+        },
+        "tags": [
+          "Habits"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/habits/{id}": {
+      "patch": {
+        "operationId": "HabitsController_update",
+        "summary": "Update habit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Habit updated"
+          }
+        },
+        "tags": [
+          "Habits"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/habits/{id}/tick": {
+      "post": {
+        "operationId": "HabitsController_tick",
+        "summary": "Mark habit as completed (idempotent)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Habit ticked"
+          }
+        },
+        "tags": [
+          "Habits"
+        ],
+        "security": [
+          {
+            "IdempotencyKey": []
+          },
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/chat": {
+      "post": {
+        "operationId": "ChatController_chat",
+        "summary": "Send message to Drill Sergeant AI",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "AI response with structured actions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reply": {
+                      "type": "string"
+                    },
+                    "updates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "suggested_actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "confidence": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/billing/checkout": {
+      "post": {
+        "operationId": "BillingController_createCheckoutSession",
+        "summary": "Create Stripe checkout session",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Checkout session created"
+          }
+        },
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/billing/portal": {
+      "post": {
+        "operationId": "BillingController_createPortalSession",
+        "summary": "Create customer portal session",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Portal session created"
+          }
+        },
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/billing/webhook": {
+      "post": {
+        "operationId": "BillingController_handleWebhook",
+        "summary": "Handle Stripe webhooks",
+        "parameters": [
+          {
+            "name": "stripe-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          }
+        },
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/v1/billing/usage": {
+      "get": {
+        "operationId": "BillingController_getUsage",
+        "summary": "Get user usage and quotas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Usage data retrieved"
+          }
+        },
+        "tags": [
+          "Billing"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/voice/preset/{id}": {
+      "get": {
+        "operationId": "VoiceController_getPreset",
+        "summary": "Get preset audio URL",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed URL for preset audio"
+          }
+        },
+        "tags": [
+          "Voice"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/voice/tts": {
+      "post": {
+        "operationId": "VoiceController_textToSpeech",
+        "summary": "Convert text to speech (PRO only)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Generated audio URL"
+          },
+          "403": {
+            "description": "Upgrade required"
+          }
+        },
+        "tags": [
+          "Voice"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/alarms": {
+      "get": {
+        "operationId": "AlarmsController_list",
+        "summary": "List user alarms",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Alarms retrieved"
+          }
+        },
+        "tags": [
+          "Alarms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "AlarmsController_create",
+        "summary": "Create new alarm",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Alarm created"
+          }
+        },
+        "tags": [
+          "Alarms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/alarms/{id}": {
+      "patch": {
+        "operationId": "AlarmsController_update",
+        "summary": "Update alarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alarm updated"
+          }
+        },
+        "tags": [
+          "Alarms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "AlarmsController_delete",
+        "summary": "Delete alarm",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alarm deleted"
+          }
+        },
+        "tags": [
+          "Alarms"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/streaks/achievements": {
+      "get": {
+        "operationId": "StreaksController_getAchievements",
+        "summary": "Get user achievements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User achievements retrieved"
+          }
+        },
+        "tags": [
+          "Streaks"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/streaks/summary": {
+      "get": {
+        "operationId": "StreaksController_getStreakSummary",
+        "summary": "Get streak summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Streak summary retrieved"
+          }
+        },
+        "tags": [
+          "Streaks"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/v1/brief/today": {
+      "get": {
+        "operationId": "BriefController_getTodaysBrief",
+        "summary": "Get comprehensive daily brief",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Daily brief with missions, achievements, and targets"
+          }
+        },
+        "tags": [
+          "Brief"
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "DrillSergeant API",
+    "description": "Production backend for DrillSergeant mobile app",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "IdempotencyKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Idempotency-Key"
+      }
+    },
+    "schemas": {}
+  }
+}
