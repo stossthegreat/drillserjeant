@@ -53,6 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final String userEmail = 'user@example.com';
   final String planType = 'FREE';
   final int daysActive = 47;
+  final _apiBaseController = TextEditingController();
   
   @override
   Widget build(BuildContext context) {
@@ -79,6 +80,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
           
           // Data & Privacy Section
           _buildDataPrivacySection(),
+          const SizedBox(height: 20),
+
+          // API Config
+          GlassCard(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    const Icon(Icons.api, size: 20),
+                    const SizedBox(width: 8),
+                    Text('API', style: Theme.of(context).textTheme.titleMedium),
+                  ]),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _apiBaseController,
+                    decoration: const InputDecoration(hintText: 'https://your-backend'),
+                    onSubmitted: (v) {
+                      if (v.trim().isNotEmpty) {
+                        apiClient.setBaseUrl(v.trim());
+                        Toast.show(context, 'API base set to: ${v.trim()}');
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: GlassButton.primary('Apply API Base URL', onPressed: () {
+                      final v = _apiBaseController.text.trim();
+                      if (v.isNotEmpty) {
+                        apiClient.setBaseUrl(v);
+                        Toast.show(context, 'API base set to: $v');
+                      }
+                    }),
+                  )
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           
           // Danger Zone

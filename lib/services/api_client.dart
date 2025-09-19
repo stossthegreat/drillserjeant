@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  final String baseUrl;
+  String baseUrl;
   String? _authToken;
 
   ApiClient({String? baseUrl})
@@ -10,6 +10,10 @@ class ApiClient {
 
   void setAuthToken(String token) {
     _authToken = token;
+  }
+
+  void setBaseUrl(String url) {
+    baseUrl = url;
   }
 
   Map<String, String> get _headers => {
