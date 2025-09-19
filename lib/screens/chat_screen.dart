@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../design/glass.dart';
 import '../services/api_client.dart';
+import '../audio/tts_provider.dart';
 
 enum Persona { harsh, coach, zen }
 
@@ -26,6 +27,8 @@ class _ChatScreenState extends State<ChatScreen> {
     'Hype me for a focus block.',
   ];
 
+  final tts = TtsProvider();
+
   void _send(String text) async {
     if (text.trim().isEmpty || isLoading) return;
     
@@ -42,19 +45,20 @@ class _ChatScreenState extends State<ChatScreen> {
         mode: _personaToMode(persona),
       );
       
+      final replyText = (response['reply'] ?? 'Acknowledged. Keep pushing.').toString();
+      final presetId = (response['audioPresetId'] ?? '').toString();
+      
       setState(() {
         chat.add({
           'role': 'sgt', 
-          'text': response['reply'] ?? 'Acknowledged. Keep pushing.',
+          'text': replyText,
         });
         isLoading = false;
       });
       
-      print('✅ Chat API response: ${response['reply']}');
+      // Optionally auto-speak if desired; for now keep manual via button
       
     } catch (e) {
-      print('❌ Chat API error: $e');
-      // Fallback to local response
       final reply = _craftReply(text.trim());
       setState(() {
         chat.add({'role': 'sgt', 'text': reply});
@@ -92,6 +96,18 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _speakLastReply() async {
+    // Find last sgt message
+    for (int i = chat.length - 1; i >= 0; i--) {
+      if (chat[i]['role'] == 'sgt') {
+        final text = chat[i]['text'] ?? '';
+        final mode = _personaToMode(persona);
+        await tts.speakDynamic(text, voiceVariant: mode);
+        break;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,6 +136,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       label: const Text('🧘 Zen'),
                       selected: persona == Persona.zen,
                       onSelected: (_) => setState(() => persona = Persona.zen),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: isLoading ? null : _speakLastReply,
+                      icon: const Icon(Icons.volume_up),
+                      label: const Text('Speak'),
                     ),
                   ],
                 ),

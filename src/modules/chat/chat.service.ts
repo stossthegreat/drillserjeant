@@ -7,7 +7,7 @@ export class ChatService {
 
   async processMessage(userId: string, body: { message: string; mode?: string; history?: any[] }) {
     const { message, mode = 'balanced' } = body;
-
+    
     // Quota check
     const allowed = await this.billing.checkQuota(userId, 'chat', 1);
     if (!allowed) {
@@ -28,7 +28,7 @@ export class ChatService {
 
   private getCannedResponse(message: string, mode: string) {
     const lower = message.toLowerCase();
-
+    
     const responses = {
       strict: {
         procrastination: "Quit whining. 3 steps: 1) Close distractions. 2) 5‑min starter. 3) 25‑min block. Move.",
@@ -48,7 +48,7 @@ export class ChatService {
     } as const;
 
     const modeResponses = (responses as any)[mode] || responses.balanced;
-
+    
     let reply = modeResponses.default;
     if (lower.includes('procrast')) {
       reply = modeResponses.procrastination;
@@ -67,4 +67,4 @@ export class ChatService {
       source: 'cds_fallback'
     };
   }
-}
+} 

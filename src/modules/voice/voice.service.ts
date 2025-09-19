@@ -45,7 +45,7 @@ export class VoiceService {
 
     await this.cacheResult(cacheKey, audioUrl, text, voice);
     await this.billing.incrementUsage(userId, 'tts', text.length);
-
+    
     return {
       url: audioUrl,
       cached: false,

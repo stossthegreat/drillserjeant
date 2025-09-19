@@ -227,29 +227,29 @@ class _HabitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
             IconButton(
               icon: Icon(item.completed ? Icons.check_box : Icons.check_box_outline_blank, color: item.completed ? Colors.greenAccent : DSXColors.textSecondary),
               onPressed: onToggle,
-            ),
+                ),
             const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                   Text(item.name, style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text('Streak: ${item.streak}  •  Difficulty: ${item.difficulty}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: DSXColors.textSecondary)),
-                ],
-              ),
-            ),
+                    ],
+                  ),
+                ),
             const SizedBox(width: 8),
             IconButton(icon: const Icon(Icons.open_in_new, size: 20), onPressed: onOpen),
             IconButton(icon: const Icon(Icons.delete_outline, size: 20), onPressed: onDelete),
-          ],
+              ],
         ),
       ),
     );
@@ -265,19 +265,19 @@ class _AntiHabitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
                 Expanded(child: Text(item.name, style: Theme.of(context).textTheme.titleMedium)),
                 IconButton(icon: const Icon(Icons.edit, size: 18), onPressed: onEdit),
                 IconButton(icon: const Icon(Icons.delete_outline, size: 18), onPressed: onDelete),
-              ],
-            ),
-            const SizedBox(height: 6),
+                  ],
+                ),
+                const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(child: Text('Clean streak: ${item.cleanStreak} days', style: Theme.of(context).textTheme.bodySmall)),
@@ -291,14 +291,14 @@ class _AntiHabitTile extends StatelessWidget {
               ],
             ),
           ],
-        ),
+          ),
       ),
     );
   }
 }
 
 class _AddTask extends StatefulWidget {
-  final void Function(String title) onAddTask;
+  final Future<void> Function(String title) onAddTask;
   const _AddTask({required this.onAddTask});
   @override
   State<_AddTask> createState() => _AddTaskState();
@@ -334,7 +334,7 @@ class _AddTaskState extends State<_AddTask> {
 }
 
 class _AddHabit extends StatefulWidget {
-  final void Function(String name, int difficulty) onAdd;
+  final Future<void> Function(String name, int difficulty) onAdd;
   const _AddHabit({required this.onAdd});
   @override
   State<_AddHabit> createState() => _AddHabitState();

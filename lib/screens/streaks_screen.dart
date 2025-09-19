@@ -75,7 +75,7 @@ class _StreaksScreenState extends State<StreaksScreen> with TickerProviderStateM
     );
     
     // Simulate checking for new achievements
-    _loadAchievements();
+_loadAchievements();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForNewAchievements();
     });

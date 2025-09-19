@@ -5,7 +5,8 @@ class ApiClient {
   final String baseUrl;
   String? _authToken;
 
-  ApiClient({this.baseUrl = 'http://localhost:8080'});
+  ApiClient({String? baseUrl})
+      : baseUrl = baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
 
   void setAuthToken(String token) {
     _authToken = token;
@@ -364,4 +365,4 @@ class ApiClient {
   }
 }
 
-final apiClient = ApiClient();
+final apiClient = ApiClient(); 
