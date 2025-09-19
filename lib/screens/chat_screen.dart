@@ -65,6 +65,10 @@ class _ChatScreenState extends State<ChatScreen> {
       // Optionally auto-speak if desired; for now keep manual via button
       
     } catch (e) {
+      // Surface error for debugging
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Chat error: $e')),
+      );
       final reply = _craftReply(text.trim());
       setState(() {
         chat.add({'role': 'sgt', 'text': reply});

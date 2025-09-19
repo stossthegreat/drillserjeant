@@ -15,7 +15,11 @@ class TtsProvider {
       if (url.isEmpty) return;
       await _player.stop();
       await _player.play(UrlSource(url));
-    } catch (_) {}
+    } catch (e) {
+      // Debug surface
+      // ignore: avoid_print
+      print('TTS preset error: $e');
+    }
   }
 
   Future<void> speakDynamic(String text, {String voiceVariant = 'balanced'}) async {
@@ -26,6 +30,10 @@ class TtsProvider {
       if (url.isEmpty) return;
       await _player.stop();
       await _player.play(UrlSource(url));
-    } catch (_) {}
+    } catch (e) {
+      // Debug surface
+      // ignore: avoid_print
+      print('TTS dynamic error: $e');
+    }
   }
 } 
