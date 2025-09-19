@@ -9,14 +9,18 @@ class TtsProvider {
   Future<void> playPreset(String id) async {
     final _ = _lastHash; // keep analyzer happy
     try {
-      // Fetch signed URL from backend
       final res = await apiClient.getVoicePreset(id);
       final url = (res['url'] ?? '').toString();
       if (url.isEmpty) return;
       await _player.stop();
-      await _player.play(UrlSource(url));
+      if (url.startsWith('data:audio')) {
+        final base64Data = url.split(',').last;
+        final bytes = base64Decode(base64Data);
+        await _player.play(BytesSource(bytes));
+      } else {
+        await _player.play(UrlSource(url));
+      }
     } catch (e) {
-      // Debug surface
       // ignore: avoid_print
       print('TTS preset error: $e');
     }
@@ -29,9 +33,14 @@ class TtsProvider {
       final url = (res['url'] ?? res['audio']?['url'] ?? '').toString();
       if (url.isEmpty) return;
       await _player.stop();
-      await _player.play(UrlSource(url));
+      if (url.startsWith('data:audio')) {
+        final base64Data = url.split(',').last;
+        final bytes = base64Decode(base64Data);
+        await _player.play(BytesSource(bytes));
+      } else {
+        await _player.play(UrlSource(url));
+      }
     } catch (e) {
-      // Debug surface
       // ignore: avoid_print
       print('TTS dynamic error: $e');
     }

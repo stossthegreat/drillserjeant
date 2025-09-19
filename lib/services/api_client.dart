@@ -125,7 +125,7 @@ class ApiClient {
       body: json.encode({}),
     );
     
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to tick habit: ${response.statusCode} ${response.body}');
@@ -143,7 +143,7 @@ class ApiClient {
       }),
     );
     
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to send chat message: ${response.statusCode} ${response.body}');

@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   Map<String, dynamic>? briefData;
+  List<dynamic> habitsPreview = [];
 
   @override
   void initState() {
@@ -24,9 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       apiClient.setAuthToken('valid-token');
       final brief = await apiClient.getBriefToday();
+      final habits = await apiClient.getHabits();
       
       setState(() {
         briefData = brief;
+        habitsPreview = (habits as List).take(6).toList();
         isLoading = false;
       });
       
@@ -393,6 +396,40 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+            ],
+            
+            const SizedBox(height: 24),
+            
+            // Habits preview
+            if (habitsPreview.isNotEmpty) ...[
+              const Text(
+                'Your Habits',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...habitsPreview.map((h) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A2A2A),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.greenAccent.withOpacity(0.8), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(
+                      (h['title'] ?? h['name'] ?? 'Habit').toString(),
+                      style: const TextStyle(color: Colors.white),
+                    )),
+                    Text('Streak ${h['streak'] ?? 0}', style: const TextStyle(color: Colors.white70)),
+                  ],
+                ),
+              )),
             ],
             
             const SizedBox(height: 100), // Bottom padding
