@@ -12,8 +12,10 @@ import 'widgets/root_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/habit_detail_screen.dart';
 import 'screens/anti_habit_detail_screen.dart';
+import 'services/api_client.dart';
 
 void main() {
+  apiClient.setBaseUrl('https://drillsergeantai-production.up.railway.app');
   runApp(const DrillSergeantApp());
 }
 
