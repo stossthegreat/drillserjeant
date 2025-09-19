@@ -28,8 +28,9 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
+      - name: Make gradlew executable (if present)
+        run: |
+          if [ -f android/gradlew ]; then chmod +x android/gradlew; fi
 
       - name: Build APK
         run: flutter build apk --release --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
