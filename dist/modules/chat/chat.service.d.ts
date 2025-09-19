@@ -19,6 +19,7 @@ export declare class ChatService {
             time?: undefined;
         })[];
         confidence: number;
+        audioPresetId: string;
         source: string;
     } | {
         error: string;
@@ -35,6 +36,8 @@ export declare class ChatService {
             time?: undefined;
         })[];
         confidence: number;
+        audioPresetId: string;
     }>;
+    private buildSystemPrompt;
     private getCannedResponse;
 }

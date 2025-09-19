@@ -95,10 +95,10 @@ class ApiClient {
       body: json.encode(habitData),
     );
     
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to create habit: ${response.body}');
+      throw Exception('Failed to create habit: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -193,10 +193,10 @@ class ApiClient {
       body: json.encode(alarmData),
     );
     
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to create alarm: ${response.body}');
+      throw Exception('Failed to create alarm: ${response.statusCode} ${response.body}');
     }
   }
 

@@ -19,6 +19,7 @@ export declare class ChatController {
             time?: undefined;
         })[];
         confidence: number;
+        audioPresetId: string;
         source: string;
     } | {
         error: string;
@@ -35,5 +36,6 @@ export declare class ChatController {
             time?: undefined;
         })[];
         confidence: number;
+        audioPresetId: string;
     }>;
 }
