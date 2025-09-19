@@ -119,41 +119,57 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: const GlassAppBar(title: 'Sergeant'),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            GlassCard(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Wrap(
-                  spacing: 8,
-                  children: [
-                    ChoiceChip(
-                      label: const Text('🪖 Harsh'),
-                      selected: persona == Persona.harsh,
-                      onSelected: (_) => setState(() => persona = Persona.harsh),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: -6,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('🪖 Harsh', style: TextStyle(fontSize: 12)),
+                          selected: persona == Persona.harsh,
+                          onSelected: (_) => setState(() => persona = Persona.harsh),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        ChoiceChip(
+                          label: const Text('📣 Coach', style: TextStyle(fontSize: 12)),
+                          selected: persona == Persona.coach,
+                          onSelected: (_) => setState(() => persona = Persona.coach),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        ChoiceChip(
+                          label: const Text('🧘 Zen', style: TextStyle(fontSize: 12)),
+                          selected: persona == Persona.zen,
+                          onSelected: (_) => setState(() => persona = Persona.zen),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ],
                     ),
-                    ChoiceChip(
-                      label: const Text('📣 Coach'),
-                      selected: persona == Persona.coach,
-                      onSelected: (_) => setState(() => persona = Persona.coach),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: isLoading ? null : _speakLastReply,
+                    icon: const Icon(Icons.volume_up, size: 16),
+                    label: const Text('Speak', style: TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                      minimumSize: const Size(0, 32),
                     ),
-                    ChoiceChip(
-                      label: const Text('🧘 Zen'),
-                      selected: persona == Persona.zen,
-                      onSelected: (_) => setState(() => persona = Persona.zen),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: isLoading ? null : _speakLastReply,
-                      icon: const Icon(Icons.volume_up),
-                      label: const Text('Speak'),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -161,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   border: Border.all(color: Colors.white.withOpacity(0.12)),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: ListView.builder(
                   itemCount: chat.length + (isLoading ? 1 : 0),
                   itemBuilder: (context, i) {
@@ -212,18 +228,30 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: quicks
-                  .map((q) => OutlinedButton(
-                        onPressed: isLoading ? null : () => _send(q),
-                        child: Text(q, style: const TextStyle(fontSize: 12)),
-                      ))
-                  .toList(),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 36,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: quicks
+                      .map((q) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: OutlinedButton(
+                              onPressed: isLoading ? null : () => _send(q),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                minimumSize: const Size(0, 30),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              child: Text(q, style: const TextStyle(fontSize: 11)),
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Expanded(
@@ -237,6 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: isLoading ? null : () => _send(controller.text),
+                  style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
                   child: isLoading 
                     ? const SizedBox(
                         width: 16,
