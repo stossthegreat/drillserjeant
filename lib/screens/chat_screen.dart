@@ -131,37 +131,37 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: [
                   Flexible(
-                    child: Wrap(
+                child: Wrap(
                       spacing: 6,
                       runSpacing: -6,
-                      children: [
-                        ChoiceChip(
+                  children: [
+                    ChoiceChip(
                           label: const Text('🪖 Harsh', style: TextStyle(fontSize: 12)),
-                          selected: persona == Persona.harsh,
-                          onSelected: (_) => setState(() => persona = Persona.harsh),
+                      selected: persona == Persona.harsh,
+                      onSelected: (_) => setState(() => persona = Persona.harsh),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        ChoiceChip(
+                    ),
+                    ChoiceChip(
                           label: const Text('📣 Coach', style: TextStyle(fontSize: 12)),
-                          selected: persona == Persona.coach,
-                          onSelected: (_) => setState(() => persona = Persona.coach),
+                      selected: persona == Persona.coach,
+                      onSelected: (_) => setState(() => persona = Persona.coach),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        ChoiceChip(
+                    ),
+                    ChoiceChip(
                           label: const Text('🧘 Zen', style: TextStyle(fontSize: 12)),
-                          selected: persona == Persona.zen,
-                          onSelected: (_) => setState(() => persona = Persona.zen),
+                      selected: persona == Persona.zen,
+                      onSelected: (_) => setState(() => persona = Persona.zen),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: isLoading ? null : _speakLastReply,
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: isLoading ? null : _speakLastReply,
                     icon: const Icon(Icons.volume_up, size: 16),
                     label: const Text('Speak', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
@@ -169,8 +169,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       visualDensity: VisualDensity.compact,
                       minimumSize: const Size(0, 32),
                     ),
-                  ),
-                ],
+                    ),
+                  ],
               ),
             ),
             const SizedBox(height: 6),
@@ -238,11 +238,11 @@ class _ChatScreenState extends State<ChatScreen> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: quicks
+              children: quicks
                       .map((q) => Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: OutlinedButton(
-                              onPressed: isLoading ? null : () => _send(q),
+                        onPressed: isLoading ? null : () => _send(q),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 minimumSize: const Size(0, 30),
@@ -250,8 +250,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               ),
                               child: Text(q, style: const TextStyle(fontSize: 11)),
                             ),
-                          ))
-                      .toList(),
+                      ))
+                  .toList(),
                 ),
               ),
             ),

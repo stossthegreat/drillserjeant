@@ -7,7 +7,7 @@ export class BillingService {
 
   constructor() {
     // Initialize with demo user
-    this.userPlans.set('demo-user-123', 'FREE');
+    this.userPlans.set('demo-user-123', 'PRO');
     this.userUsage.set('demo-user-123', {
       chatCallsToday: 5,
       ttsCharsToday: 150,

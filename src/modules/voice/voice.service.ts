@@ -6,17 +6,15 @@ export class VoiceService {
   constructor(private readonly billing: BillingService) {}
 
   async getPreset(id: string) {
-    const presets = {
-      'praise_30_day': 'https://example.com/audio/praise_30_day.mp3',
-      'alarm_wake': 'https://example.com/audio/alarm_wake.mp3',
-      'streak_save': 'https://example.com/audio/streak_save.mp3',
-    } as const;
-
-    const url = (presets as any)[id];
-    if (!url) {
-      throw new Error('Preset not found');
-    }
-
+    // Instead of static example URLs, synthesize a short preset line
+    const phrases: Record<string, string> = {
+      'praise_30_day': 'Thirty days strong. Outstanding discipline.',
+      'alarm_wake': 'Up! Out of bed. Mission starts now.',
+      'streak_save': 'Saved the streak. Keep the momentum.',
+    };
+    const text = phrases[id];
+    if (!text) throw new Error('Preset not found');
+    const url = await this.generateTTS(text, 'balanced');
     return { url, expiresAt: new Date(Date.now() + 3600000).toISOString() };
   }
 
@@ -67,10 +65,39 @@ export class VoiceService {
   }
 
   private async generateTTS(text: string, voice?: string): Promise<string> {
+    const apiKey = process.env.ELEVENLABS_API_KEY;
     const voiceId = this.getVoiceId(voice);
-    console.log(`🎙️  [MOCK] ElevenLabs TTS: voice=${voiceId}, chars=${text.length}`);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return `https://example.com/audio/tts_${Date.now()}.mp3`;
+    if (!apiKey) {
+      console.warn('ELEVENLABS_API_KEY not set; returning mock URL');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return `https://example.com/audio/tts_${Date.now()}.mp3`;
+    }
+
+    const fetch = (await import('node-fetch')).default as any;
+    const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text,
+        model_id: process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2',
+        voice_settings: { stability: 0.4, similarity_boost: 0.7 }
+      })
+    });
+
+    if (!res.ok) {
+      const errTxt = await res.text();
+      throw new Error(`ElevenLabs TTS failed: ${res.status} ${errTxt}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const dataUrl = 'data:audio/mpeg;base64,' + buffer.toString('base64');
+    return dataUrl;
   }
 
   private async cacheResult(cacheKey: string, url: string, text: string, voice?: string) {

@@ -18,7 +18,7 @@ class TtsProvider {
         final bytes = base64Decode(base64Data);
         await _player.play(BytesSource(bytes));
       } else {
-        await _player.play(UrlSource(url));
+      await _player.play(UrlSource(url));
       }
     } catch (e) {
       // ignore: avoid_print
@@ -38,7 +38,7 @@ class TtsProvider {
         final bytes = base64Decode(base64Data);
         await _player.play(BytesSource(bytes));
       } else {
-        await _player.play(UrlSource(url));
+      await _player.play(UrlSource(url));
       }
     } catch (e) {
       // ignore: avoid_print
