@@ -29,6 +29,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   final tts = TtsProvider();
 
+  @override
+  void initState() {
+    super.initState();
+    apiClient.setAuthToken('valid-token');
+  }
+
   void _send(String text) async {
     if (text.trim().isEmpty || isLoading) return;
     
