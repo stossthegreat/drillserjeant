@@ -93,6 +93,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Icon(Icons.api, size: 20),
                     const SizedBox(width: 8),
                     Text('API', style: Theme.of(context).textTheme.titleMedium),
+                    const Spacer(),
+                    Text(apiClient.getBaseUrl(), style: Theme.of(context).textTheme.bodySmall),
                   ]),
                   const SizedBox(height: 12),
                   TextField(
@@ -101,21 +103,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onSubmitted: (v) {
                       if (v.trim().isNotEmpty) {
                         apiClient.setBaseUrl(v.trim());
-                        Toast.show(context, 'API base set to: ${v.trim()}');
+                        Toast.show(context, 'API base set to: ${apiClient.getBaseUrl()}');
                       }
                     },
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: GlassButton.primary('Apply API Base URL', onPressed: () {
-                      final v = _apiBaseController.text.trim();
-                      if (v.isNotEmpty) {
-                        apiClient.setBaseUrl(v);
-                        Toast.show(context, 'API base set to: $v');
-                      }
-                    }),
-                  )
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GlassButton.primary('Apply API Base URL', onPressed: () {
+                          final v = _apiBaseController.text.trim();
+                          if (v.isNotEmpty) {
+                            apiClient.setBaseUrl(v);
+                            Toast.show(context, 'API base set to: ${apiClient.getBaseUrl()}');
+                            setState(() {});
+                          }
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GlassButton.ghost('Test API', onPressed: () async {
+                          try {
+                            apiClient.setAuthToken('valid-token');
+                            final res = await apiClient.getBriefToday();
+                            Toast.show(context, 'OK: brief loaded');
+                          } catch (e) {
+                            Toast.show(context, 'API error: $e');
+                          }
+                        }),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

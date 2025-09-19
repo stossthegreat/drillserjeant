@@ -13,8 +13,15 @@ class ApiClient {
   }
 
   void setBaseUrl(String url) {
-    baseUrl = url;
+    var v = url.trim();
+    if (v.endsWith('/')) v = v.substring(0, v.length - 1);
+    if (!v.startsWith('http://') && !v.startsWith('https://')) {
+      v = 'https://$v';
+    }
+    baseUrl = v;
   }
+
+  String getBaseUrl() => baseUrl;
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
@@ -74,7 +81,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to get brief: ${response.body}');
+      throw Exception('Failed to get brief: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -88,7 +95,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load habits: ${response.body}');
+      throw Exception('Failed to load habits: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -121,7 +128,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to tick habit: ${response.body}');
+      throw Exception('Failed to tick habit: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -139,7 +146,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to send chat message: ${response.body}');
+      throw Exception('Failed to send chat message: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -153,7 +160,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to get voice preset: ${response.body}');
+      throw Exception('Failed to get voice preset: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -172,7 +179,7 @@ class ApiClient {
     } else if (response.statusCode == 402) {
       throw Exception('TTS quota exceeded or PRO plan required');
     } else {
-      throw Exception('Failed to generate TTS: ${response.body}');
+      throw Exception('Failed to generate TTS: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -186,7 +193,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load alarms: ${response.body}');
+      throw Exception('Failed to load alarms: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -213,7 +220,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to dismiss alarm: ${response.body}');
+      throw Exception('Failed to dismiss alarm: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -224,7 +231,7 @@ class ApiClient {
     );
     
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete alarm: ${response.body}');
+      throw Exception('Failed to delete alarm: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -238,7 +245,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load anti-habits: ${response.body}');
+      throw Exception('Failed to load anti-habits: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -257,7 +264,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to record slip: ${response.body}');
+      throw Exception('Failed to record slip: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -271,7 +278,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to get billing usage: ${response.body}');
+      throw Exception('Failed to get billing usage: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -284,7 +291,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to create checkout session: ${response.body}');
+      throw Exception('Failed to create checkout session: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -297,7 +304,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to create portal session: ${response.body}');
+      throw Exception('Failed to create portal session: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -311,7 +318,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to get achievements: ${response.body}');
+      throw Exception('Failed to get achievements: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -324,7 +331,7 @@ class ApiClient {
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to get streak summary: ${response.body}');
+      throw Exception('Failed to get streak summary: ${response.statusCode} ${response.body}');
     }
   }
 
