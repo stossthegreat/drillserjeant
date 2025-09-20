@@ -24,14 +24,20 @@ class TtsProvider {
       if (url.isEmpty) return;
       await _player.stop();
       if (url.startsWith('data:audio')) {
-        final base64Data = url.split(',').last;
         try {
-          final bytes = base64Decode(base64Data);
-          await _player.play(BytesSource(bytes));
-        } catch (e) {
-          print('Base64 decode error: $e');
-          // Fallback to treating as URL
+          // For web, try playing data URL directly first
           await _player.play(UrlSource(url));
+        } catch (e) {
+          print('Data URL playback failed: $e');
+          // Try base64 decode as fallback
+          try {
+            final base64Data = url.split(',').last;
+            final bytes = base64Decode(base64Data);
+            await _player.play(BytesSource(bytes));
+          } catch (e2) {
+            print('Base64 decode error: $e2');
+            throw e; // Re-throw original error
+          }
         }
       } else {
         await _player.play(UrlSource(url));
@@ -69,14 +75,20 @@ class TtsProvider {
       print('Playing audio from: $url'); // Debug log
       
       if (url.startsWith('data:audio')) {
-        final base64Data = url.split(',').last;
         try {
-          final bytes = base64Decode(base64Data);
-          await _player.play(BytesSource(bytes));
-        } catch (e) {
-          print('Base64 decode error: $e');
-          // Fallback to treating as URL
+          // For web, try playing data URL directly first
           await _player.play(UrlSource(url));
+        } catch (e) {
+          print('Data URL playback failed: $e');
+          // Try base64 decode as fallback
+          try {
+            final base64Data = url.split(',').last;
+            final bytes = base64Decode(base64Data);
+            await _player.play(BytesSource(bytes));
+          } catch (e2) {
+            print('Base64 decode error: $e2');
+            throw e; // Re-throw original error
+          }
         }
       } else {
         await _player.play(UrlSource(url));

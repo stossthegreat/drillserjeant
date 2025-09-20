@@ -23,10 +23,29 @@ class AlarmAudioProvider {
     try {
       await _player.stop();
       
-      // Use a simple notification sound URL or asset
-      // For web, we need a proper audio file URL
-      const soundUrl = 'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav';
-      await _player.play(UrlSource(soundUrl));
+      // Use working audio URLs for web
+      const List<String> fallbackUrls = [
+        'https://www.soundjay.com/misc/sounds/bell-ringing-05.wav',
+        'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
+        'https://www.soundjay.com/misc/sounds/bell-ringing-04.wav',
+        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSMFl2+z9N2QQAoUXrTp66hVFApGn+DyvmwhBjeR2O/NeSYELILM8tyOSQUUXbXn4p9dGBVhq+nzvmEaA'
+      ];
+      
+      bool audioPlayed = false;
+      for (String url in fallbackUrls) {
+        try {
+          await _player.play(UrlSource(url));
+          audioPlayed = true;
+          break;
+        } catch (e) {
+          print('Failed to play from $url: $e');
+          continue;
+        }
+      }
+      
+      if (!audioPlayed) {
+        throw Exception('All audio sources failed');
+      }
       
       // Set to loop for alarm persistence
       await _player.setReleaseMode(ReleaseMode.loop);
