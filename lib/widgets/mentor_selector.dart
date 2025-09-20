@@ -87,12 +87,14 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                         : null,
                   ),
                   child: ClipOval(
-                        child: Image.asset(
-                          mentor.avatarAsset,
-                          width: 70,
-                          height: 70,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
+                        child: Center(
+                          child: Image.asset(
+                            mentor.avatarAsset,
+                            width: 70,
+                            height: 70,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                            errorBuilder: (context, error, stackTrace) {
                             // Fallback to gradient if image fails to load
                             return Container(
                           decoration: BoxDecoration(
@@ -125,6 +127,7 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                           },
                               ),
                             ),
+                          ),
                           ),
                     const SizedBox(height: 4),
                     Text(

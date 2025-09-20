@@ -5,8 +5,6 @@ import '../audio/tts_provider.dart';
 import '../models/mentor.dart';
 import '../widgets/mentor_selector.dart';
 
-enum Persona { harsh, coach, zen }
-
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -15,7 +13,6 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  Persona persona = Persona.harsh;
   Mentor selectedMentor = LegendaryMentors.drillSergeant;
   final List<Map<String, String>> chat = [
     {'role': 'sys', 'text': 'Welcome to DrillSergeantX. Choose your legendary mentor above.'},
@@ -111,16 +108,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  String _personaToMode(Persona persona) {
-    switch (persona) {
-      case Persona.harsh:
-        return 'strict';
-      case Persona.coach:
-        return 'balanced';
-      case Persona.zen:
-        return 'light';
-    }
-  }
+
 
   String _mentorToMode(String mentorId) {
     switch (mentorId) {
@@ -141,19 +129,29 @@ class _ChatScreenState extends State<ChatScreen> {
 
   String _craftReply(String msg) {
     final lower = msg.toLowerCase();
-    switch (persona) {
-      case Persona.harsh:
-        if (lower.contains('procrast')) return 'Quit whining. 3 steps: 1) Close distractions. 2) 5‑min starter. 3) 25‑min block. Move.';
-        if (lower.contains('plan')) return 'Plan: 1) Pick one task. 2) 25‑min focus. 3) Report DONE.';
-        return 'Outstanding. Keep that fire.';
-      case Persona.coach:
-        if (lower.contains('procrast')) return 'Reset: one small rep, then a clean 25. You got this.';
-        if (lower.contains('plan')) return 'Pick the next best task, lock a 25, debrief in one sentence.';
-        return 'Nice rep—stack another.';
-      case Persona.zen:
-        if (lower.contains('procrast')) return 'Notice the resistance. One mindful step, then begin a 25 minute sit.';
-        if (lower.contains('plan')) return 'Choose one task. Breathe. Begin with presence.';
-        return 'Calm power.';
+    switch (selectedMentor.id) {
+      case 'drill_sergeant':
+        if (lower.contains('procrast')) return 'Drop and give me 20! Stop making excuses and GET MOVING! 3 steps: 1) Close distractions. 2) 5‑min starter. 3) 25‑min block. MOVE IT!';
+        if (lower.contains('plan')) return 'Orders: 1) Pick ONE mission. 2) 25‑min assault. 3) Report COMPLETE! NO EXCUSES, RECRUIT!';
+        return 'Outstanding work, soldier! Keep that fire burning!';
+      case 'marcus_aurelius':
+        if (lower.contains('procrast')) return 'Consider: What would virtue do here? 1) Accept the moment. 2) Choose reason over emotion. 3) Begin with wisdom.';
+        if (lower.contains('plan')) return 'Reflect: 1) What serves the greater good? 2) Focus on what you control. 3) Act with purpose.';
+        return 'Well reasoned. The universe rewards virtuous action.';
+      case 'miyamoto_musashi':
+        if (lower.contains('procrast')) return 'Cut through hesitation like a blade through water. 1) Assess the situation. 2) Choose your strategy. 3) Execute with precision.';
+        if (lower.contains('plan')) return 'Strategy: 1) Know your enemy (distraction). 2) Train your mind. 3) Strike when ready.';
+        return 'The way is in training. Continue your practice.';
+      case 'confucius':
+        if (lower.contains('procrast')) return 'Seek harmony within. 1) Small steps, great journey. 2) Balance effort and rest. 3) Progress through patience.';
+        if (lower.contains('plan')) return 'Wisdom: 1) Learn through reflection. 2) Apply with humility. 3) Share what you discover.';
+        return 'Learning without thinking is useless. You are progressing well.';
+      case 'abraham_lincoln':
+        if (lower.contains('procrast')) return 'Keep splitting those rails! 1) Honest work beats excuses. 2) Start small, think big. 3) Perseverance conquers all.';
+        if (lower.contains('plan')) return 'Simple plan: 1) Pick your task. 2) Work steady and honest. 3) See it through to the end.';
+        return 'I am a slow walker, but I never walk back. Keep going!';
+      default:
+        return 'Acknowledged. Keep pushing forward.';
     }
   }
 
