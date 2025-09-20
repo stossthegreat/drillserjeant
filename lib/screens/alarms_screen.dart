@@ -3,6 +3,7 @@ import '../design/glass.dart';
 import '../design/tokens.dart';
 import '../services/api_client.dart';
 import '../design/feedback.dart';
+import '../audio/alarm_audio.dart';
 
 class AlarmItem {
   String id;
@@ -223,6 +224,16 @@ class _AlarmsScreenState extends State<AlarmsScreen> with TickerProviderStateMix
                   child: GlassButton.ghost('Test 10s', onPressed: () => _createTestAlarm()),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Audio permission for Chrome
+            Center(
+              child: AlarmAudioPermissionButton(
+                onPermissionGranted: () {
+                  Toast.show(context, 'Alarm audio enabled! 🔊');
+                },
+              ),
             ),
             const SizedBox(height: 20),
             
