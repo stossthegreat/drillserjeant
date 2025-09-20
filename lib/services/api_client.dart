@@ -77,11 +77,42 @@ class ApiClient {
       Uri.parse('$baseUrl/v1/brief/today'),
       headers: _headers,
     );
-    
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to get brief: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> selectForToday(String habitId, {String? date}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/brief/today/select'),
+      headers: _headers,
+      body: json.encode({
+        'habitId': habitId,
+        if (date != null) 'date': date,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to select for today: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> deselectForToday(String habitId, {String? date}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/brief/today/deselect'),
+      headers: _headers,
+      body: json.encode({
+        'habitId': habitId,
+        if (date != null) 'date': date,
+      }),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to deselect for today: ${response.statusCode} ${response.body}');
     }
   }
 

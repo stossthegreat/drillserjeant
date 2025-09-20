@@ -40,6 +40,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
   final List<AntiHabitItem> antiHabits = [
     AntiHabitItem(id: 'a1', name: 'No Social Media', cleanStreak: 2, targetMinutes: 15, interceptionEnabled: false, dangerHours: {20,21,22}),
   ];
+  List<dynamic> habits = [];
+  List<dynamic> tasks = [];
+  bool isLoading = true;
+  Set<String> selectedHabits = {};
+  Set<String> selectedTasks = {};
 
   @override
   void initState() {

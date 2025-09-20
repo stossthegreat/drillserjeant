@@ -9,9 +9,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Map<String, dynamic> briefData = {};
+  List<dynamic> todayItems = [];
   bool isLoading = true;
-  Map<String, dynamic>? briefData;
-  List<dynamic> habitsPreview = [];
 
   @override
   void initState() {
@@ -19,40 +19,85 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadBrief();
   }
 
-  void _loadBrief() async {
-    setState(() { isLoading = true; });
-    
+  Future<void> _loadBrief() async {
     try {
-      apiClient.setAuthToken('valid-token');
       final brief = await apiClient.getBriefToday();
-      final habits = await apiClient.getHabits();
-      
       setState(() {
         briefData = brief;
-        habitsPreview = (habits as List).take(6).toList();
+        todayItems = brief['today'] ?? [];
         isLoading = false;
       });
-      
     } catch (e) {
-      print('Failed to load brief: $e');
-      setState(() { isLoading = false; });
+      print('Error loading brief: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _completeTodayItem(Map<String, dynamic> item) async {
+    try {
+      if (item['type'] == 'habit') {
+        await apiClient.tickHabit(item['id']);
+      } else {
+        await apiClient.tickTask(item['id']);
+      }
+      
+      // Remove from today after completion
+      await apiClient.deselectForToday(item['id']);
+      
+      setState(() {
+        todayItems.removeWhere((i) => i['id'] == item['id']);
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✅ ${item['name']} completed!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error completing item: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeTodayItem(Map<String, dynamic> item) async {
+    try {
+      await apiClient.deselectForToday(item['id']);
+      setState(() {
+        todayItems.removeWhere((i) => i['id'] == item['id']);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Removed ${item['name']} from today')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error removing item: $e')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading && briefData == null) {
+    if (isLoading && briefData.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    final user = briefData?['user'] ?? {};
-    final missions = briefData?['missions'] ?? [];
-    final riskBanners = briefData?['riskBanners'] ?? [];
-    final weeklyTarget = briefData?['weeklyTarget'] ?? {};
-    final streaksSummary = briefData?['streaksSummary'] ?? {};
-    final nudges = briefData?['nudges'] ?? [];
+    final user = briefData['user'] ?? {};
+    final missions = briefData['missions'] ?? [];
+    final riskBanners = briefData['riskBanners'] ?? [];
+    final weeklyTarget = briefData['weeklyTarget'] ?? {};
+    final streaksSummary = briefData['streaksSummary'] ?? {};
+    final nudges = briefData['nudges'] ?? [];
 
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A1A),
@@ -400,8 +445,111 @@ class _HomeScreenState extends State<HomeScreen> {
             
             const SizedBox(height: 24),
             
+            // Today Items Section
+            GlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.today,
+                          color: Colors.blue[300],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Today\'s Focus',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (todayItems.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[800]?.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey[600]!.withOpacity(0.3),
+                          ),
+                        ),
+                        child: const Text(
+                          'No items for today. Add habits or tasks from the Habits tab.',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    else
+                      ...todayItems.map((item) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800]?.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      item['type'] == 'habit' 
+                                          ? Icons.fitness_center 
+                                          : Icons.task_alt,
+                                      color: Colors.blue[300],
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        item['name'] ?? 'Item',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GlassButton.ghost(
+                              'Complete',
+                              onPressed: () => _completeTodayItem(item),
+                              icon: Icons.check,
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              onPressed: () => _removeTodayItem(item),
+                              icon: const Icon(Icons.remove_circle_outline),
+                              iconSize: 20,
+                              color: Colors.red[300],
+                            ),
+                          ],
+                        ),
+                      )).toList(),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+            
             // Habits preview
-            if (habitsPreview.isNotEmpty) ...[
+            if (briefData['habits'] != null && (briefData['habits'] as List).isNotEmpty) ...[
               const Text(
                 'Your Habits',
                 style: TextStyle(
@@ -411,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              ...habitsPreview.map((h) => Container(
+              ...(briefData['habits'] as List).map((h) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
