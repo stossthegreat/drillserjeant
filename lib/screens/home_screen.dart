@@ -3,25 +3,60 @@ import '../services/api_client.dart';
 import '../design/glass.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? refreshTrigger;
+  
+  const HomeScreen({super.key, this.refreshTrigger});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Map<String, dynamic> briefData = {};
   List<dynamic> todayItems = [];
   bool isLoading = true;
+  String? lastRefreshTrigger;
 
   @override
   void initState() {
     super.initState();
+    lastRefreshTrigger = widget.refreshTrigger;
+    _loadBrief();
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if refresh trigger changed
+    if (widget.refreshTrigger != null && 
+        widget.refreshTrigger != lastRefreshTrigger) {
+      print('🔄 Home screen refreshing due to habit selection');
+      lastRefreshTrigger = widget.refreshTrigger;
+      _loadBrief();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data when this screen becomes active, but only if not currently loading
+    if (!isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadBrief();
+      });
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Refresh when returning from another screen
     _loadBrief();
   }
 
   Future<void> _loadBrief() async {
     try {
+      // Ensure API client has auth token
+      apiClient.setAuthToken('valid-token');
       final brief = await apiClient.getBriefToday();
       setState(() {
         briefData = brief;
