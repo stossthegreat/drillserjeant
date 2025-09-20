@@ -132,7 +132,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: GlassAppBar(
         title: '${selectedMentor.name} - ${selectedMentor.title}',
-        backgroundColor: selectedMentor.primaryColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(12),
@@ -161,17 +160,14 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: isLoading ? null : _speakLastReply,
-                    icon: const Icon(Icons.volume_up, size: 16),
-                    label: const Text('Speak', style: TextStyle(fontSize: 12)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      visualDensity: VisualDensity.compact,
-                      minimumSize: const Size(0, 32),
-                    ),
-                    ),
-                  ],
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : _speakLastReply,
+              icon: const Icon(Icons.volume_up, size: 16),
+              label: const Text('Speak', style: TextStyle(fontSize: 12)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                visualDensity: VisualDensity.compact,
+                minimumSize: const Size(0, 32),
               ),
             ),
             const SizedBox(height: 6),
