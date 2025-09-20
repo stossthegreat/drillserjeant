@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.drillsergeant"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -35,6 +35,7 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            minifyEnabled = false  // Disable code shrinking to avoid API issues
         }
     }
 }

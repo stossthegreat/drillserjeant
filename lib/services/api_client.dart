@@ -23,6 +23,31 @@ class ApiClient {
 
   String getBaseUrl() => baseUrl;
 
+  // Health check for debugging
+  Future<Map<String, dynamic>> healthCheck() async {
+    print('🏥 Health check starting...');
+    print('🏥 Testing URL: $baseUrl/health');
+    
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/health'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      print('🏥 Health check status: ${response.statusCode}');
+      print('🏥 Health check body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        return {'status': 'ok', 'body': response.body};
+      } else {
+        return {'status': 'error', 'code': response.statusCode, 'body': response.body};
+      }
+    } catch (e) {
+      print('🏥 ❌ Health check failed: $e');
+      return {'status': 'exception', 'error': e.toString()};
+    }
+  }
+
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
     if (_authToken != null) 'Authorization': 'Bearer $_authToken',

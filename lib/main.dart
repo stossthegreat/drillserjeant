@@ -15,7 +15,20 @@ import 'screens/anti_habit_detail_screen.dart';
 import 'services/api_client.dart';
 
 void main() {
-  apiClient.setBaseUrl('https://drillsergeantai-production.up.railway.app');
+  // Debug: Print the environment variable and actual URL being used
+  const apiUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  print('🌐 Environment API_BASE_URL: "$apiUrl"');
+  print('🌐 ApiClient baseUrl before override: "${apiClient.getBaseUrl()}"');
+  
+  // Override with production URL (this will be overridden by environment variable if provided)
+  if (apiUrl.isEmpty) {
+    apiClient.setBaseUrl('https://drillsergeantai-production.up.railway.app');
+  } else {
+    apiClient.setBaseUrl(apiUrl);
+  }
+  
+  print('🌐 Final ApiClient baseUrl: "${apiClient.getBaseUrl()}"');
+  
   runApp(const DrillSergeantApp());
 }
 
@@ -50,6 +63,36 @@ class DrillSergeantApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: buildDarkTheme(),
       routerConfig: router,
+      builder: (context, child) {
+        return Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            children: [
+              child ?? const SizedBox(),
+              // Debug banner showing API URL
+              Positioned(
+                top: 40,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'API: ${apiClient.getBaseUrl()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
