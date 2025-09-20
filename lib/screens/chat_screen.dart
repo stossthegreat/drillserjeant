@@ -75,8 +75,8 @@ class _ChatScreenState extends State<ChatScreen> {
         chat.add({
           'role': 'sgt', 
           'text': replyText,
-          'voice': voiceData?.toString(), // Convert to string to avoid type issues
-          'audioPresetId': audioPresetId?.toString(), // Ensure string type
+          'voice': voiceData?.toString() ?? '', // Convert to string with null fallback
+          'audioPresetId': audioPresetId?.toString() ?? '', // Ensure string type with null fallback
         });
         isLoading = false;
       });
