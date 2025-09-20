@@ -26,12 +26,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
   Future<void> _loadHabits() async {
     setState(() { isLoading = true; });
     try {
+      print('🔄 Loading habits and today items...'); // Debug
       apiClient.setAuthToken("valid-token");
       final habitsList = await apiClient.getHabits();
+      print('✅ Loaded ${(habitsList as List).length} habits'); // Debug
       
       // Load current today selections to show which items are already added
       final brief = await apiClient.getBriefToday();
+      print('✅ Loaded brief: ${brief.keys}'); // Debug
       final todayItems = brief['today'] ?? [];
+      print('📋 Today items: ${todayItems.length}'); // Debug
       final todayHabitIds = <String>{};
       final todayTaskIds = <String>{};
       
@@ -50,7 +54,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
         selectedTasks = todayTaskIds;
         isLoading = false; 
       });
+      print('✅ Habits screen loaded successfully'); // Debug
     } catch (e) {
+      print('❌ Error loading habits: $e'); // Debug
       setState(() { isLoading = false; });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,9 +81,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Habit created')),
         );
-        context.go('/');
+        context.go('/home');
       }
     } catch (e) {
+      print('Error creating habit: $e'); // Debug logging
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to create habit: $e')),
@@ -102,9 +109,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Task created')),
         );
-        context.go('/');
+        context.go('/home');
       }
     } catch (e) {
+      print('Error creating task: $e'); // Debug logging
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to create task: $e')),
@@ -236,10 +244,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
             const SnackBar(content: Text('Added to today! Check Home tab.')),
           );
           // Navigate to home after adding
-          context.go('/');
+          context.go('/home');
         }
       }
     } catch (e) {
+      print('Error toggling today selection: $e'); // Debug logging
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
