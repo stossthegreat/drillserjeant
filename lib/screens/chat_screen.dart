@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../design/glass.dart';
 import '../services/api_client.dart';
 import '../audio/tts_provider.dart';
+import '../models/mentor.dart';
+import '../widgets/mentor_selector.dart';
 
 enum Persona { harsh, coach, zen }
 
@@ -14,18 +16,14 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   Persona persona = Persona.harsh;
+  Mentor selectedMentor = LegendaryMentors.drillSergeant;
   final List<Map<String, String>> chat = [
-    {'role': 'sys', 'text': 'Welcome to DrillSergeantX. Report your situation.'},
+    {'role': 'sys', 'text': 'Welcome to DrillSergeantX. Choose your legendary mentor above.'},
   ];
   final controller = TextEditingController();
   bool isLoading = false;
   
-  final quicks = const [
-    "I'm procrastinating.",
-    'Give me a 3-step plan for the next hour.',
-    'I missed a habit—reset me.',
-    'Hype me for a focus block.',
-  ];
+  List<String> get quicks => selectedMentor.quickResponses;
 
   final tts = TtsProvider();
 
@@ -33,6 +31,17 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     apiClient.setAuthToken('valid-token');
+  }
+
+  void _onMentorChanged(Mentor mentor) {
+    setState(() {
+      selectedMentor = mentor;
+      // Add system message about mentor change
+      chat.add({
+        'role': 'sys', 
+        'text': '${mentor.name} has joined you. ${mentor.signature}',
+      });
+    });
   }
 
   void _send(String text) async {
@@ -45,10 +54,10 @@ class _ChatScreenState extends State<ChatScreen> {
     controller.clear();
 
     try {
-      // Call real API
+      // Call real API with mentor personality
       final response = await apiClient.sendChatMessage(
         text.trim(),
-        mode: _personaToMode(persona),
+        mode: selectedMentor.id,
       );
       
       final replyText = (response['reply'] ?? 'Acknowledged. Keep pushing.').toString();
@@ -121,45 +130,37 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const GlassAppBar(title: 'Sergeant'),
+      appBar: GlassAppBar(
+        title: '${selectedMentor.name} - ${selectedMentor.title}',
+        backgroundColor: selectedMentor.primaryColor,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              child: Row(
-                children: [
-                  Flexible(
-                child: Wrap(
-                      spacing: 6,
-                      runSpacing: -6,
-                  children: [
-                    ChoiceChip(
-                          label: const Text('🪖 Harsh', style: TextStyle(fontSize: 12)),
-                      selected: persona == Persona.harsh,
-                      onSelected: (_) => setState(() => persona = Persona.harsh),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    ChoiceChip(
-                          label: const Text('📣 Coach', style: TextStyle(fontSize: 12)),
-                      selected: persona == Persona.coach,
-                      onSelected: (_) => setState(() => persona = Persona.coach),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    ChoiceChip(
-                          label: const Text('🧘 Zen', style: TextStyle(fontSize: 12)),
-                      selected: persona == Persona.zen,
-                      onSelected: (_) => setState(() => persona = Persona.zen),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ],
-                    ),
-                    ),
-                    const SizedBox(width: 8),
+            // Legendary Mentors Selector
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    selectedMentor.primaryColor.withOpacity(0.1),
+                    selectedMentor.accentColor.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: selectedMentor.primaryColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: MentorSelector(
+                selectedMentor: selectedMentor,
+                onMentorChanged: _onMentorChanged,
+              ),
+            ),
+            const SizedBox(height: 8),
                     OutlinedButton.icon(
                       onPressed: isLoading ? null : _speakLastReply,
                     icon: const Icon(Icons.volume_up, size: 16),
