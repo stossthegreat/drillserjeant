@@ -64,6 +64,11 @@ class _ChatScreenState extends State<ChatScreen> {
       final voiceData = response['voice']; // New format
       final audioPresetId = response['audioPresetId']; // Old format
       
+      print('🎯 Chat response received: ${response.keys}');
+      print('🎯 Reply text: ${replyText.substring(0, replyText.length > 50 ? 50 : replyText.length)}...');
+      print('🎯 Voice data: $voiceData');
+      print('🎯 Audio preset ID: $audioPresetId');
+      
       setState(() {
         chat.add({
           'role': 'sgt', 
@@ -182,8 +187,8 @@ class _ChatScreenState extends State<ChatScreen> {
           // Fallback to generating new TTS
           final text = (message['text'] ?? '').toString();
           if (text.isNotEmpty) {
-        final mode = _personaToMode(persona);
-        await tts.speakDynamic(text, voiceVariant: mode);
+            final mode = _mentorToMode(selectedMentor.id);
+            await tts.speakDynamic(text, voiceVariant: mode);
           }
         }
         break;
