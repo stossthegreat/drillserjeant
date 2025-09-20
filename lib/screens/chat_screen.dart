@@ -61,8 +61,13 @@ class _ChatScreenState extends State<ChatScreen> {
       final voiceData = response['voice']; // New format
       final audioPresetId = response['audioPresetId']; // Old format
       
+      // Defensive null checking
+      if (replyText.isEmpty) {
+        throw Exception('Empty reply text received from API');
+      }
+      
       print('🎯 Chat response received: ${response.keys}');
-      print('🎯 Reply text: ${replyText.substring(0, replyText.length > 50 ? 50 : replyText.length)}...');
+      print('🎯 Reply text: ${replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText}');
       print('🎯 Voice data: $voiceData');
       print('🎯 Audio preset ID: $audioPresetId');
       
@@ -70,8 +75,8 @@ class _ChatScreenState extends State<ChatScreen> {
         chat.add({
           'role': 'sgt', 
           'text': replyText,
-          'voice': voiceData, // Store voice data with the message
-          'audioPresetId': audioPresetId, // Store preset ID for fallback
+          'voice': voiceData?.toString(), // Convert to string to avoid type issues
+          'audioPresetId': audioPresetId?.toString(), // Ensure string type
         });
         isLoading = false;
       });
@@ -166,21 +171,8 @@ class _ChatScreenState extends State<ChatScreen> {
         
         bool voicePlayed = false;
         
-        // Try new format first
-        if (voiceData is Map<String, dynamic>) {
-          final url = (voiceData as Map<String, dynamic>)['url'];
-          if (url is String && url.isNotEmpty) {
-            try {
-              await tts.playFromUrl(url);
-              voicePlayed = true;
-            } catch (e) {
-              print('Voice playback error: $e');
-            }
-          }
-        }
-        
-        // Try old format (audioPresetId)
-        if (!voicePlayed && audioPresetId != null && audioPresetId.toString().isNotEmpty) {
+        // Use audioPresetId if available
+        if (audioPresetId != null && audioPresetId.toString().isNotEmpty && audioPresetId.toString() != 'null') {
           try {
             await tts.playPreset(audioPresetId.toString());
             voicePlayed = true;
