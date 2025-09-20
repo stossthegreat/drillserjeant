@@ -58,13 +58,34 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       // Ensure API client has auth token
       apiClient.setAuthToken('valid-token');
       final brief = await apiClient.getBriefToday();
+      
+      print('📋 Brief loaded: ${brief.keys}');
+      print('📋 Today items count: ${(brief['today'] as List?)?.length ?? 0}');
+      print('📋 Raw today data: ${brief['today']}');
+      
+      // Fallback: if today is empty but habits exist, use a subset of habits as today
+      List<dynamic> today = brief['today'] ?? [];
+      if (today.isEmpty && brief['habits'] != null) {
+        final habits = brief['habits'] as List;
+        print('📋 Today is empty, using fallback with ${habits.length} habits');
+        // Use first 3 habits as today's items for now
+        today = habits.take(3).map((habit) => {
+          'id': habit['id'],
+          'name': habit['title'] ?? habit['name'],
+          'type': 'habit',
+          'completed': habit['status'] == 'completed',
+          'streak': habit['streak'] ?? 0,
+        }).toList();
+        print('📋 Fallback today items: ${today.length}');
+      }
+      
       setState(() {
         briefData = brief;
-        todayItems = brief['today'] ?? [];
+        todayItems = today;
         isLoading = false;
       });
     } catch (e) {
-      print('Error loading brief: $e');
+      print('❌ Error loading brief: $e');
       setState(() {
         isLoading = false;
       });

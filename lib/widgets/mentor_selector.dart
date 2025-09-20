@@ -42,7 +42,7 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 130, // Increased height to accommodate names
+      height: 120, // Increased height to accommodate names
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -63,23 +63,23 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 70,
-                      height: 70,
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: isSelected
                         ? Border.all(
-                            color: mentor.primaryColor.withOpacity(_glowAnimation.value),
+                                color: mentor.primaryColor.withValues(alpha: _glowAnimation.value),
                             width: 3,
                           )
                         : Border.all(
-                            color: Colors.grey.withOpacity(0.3),
+                                color: Colors.grey.withValues(alpha: 0.3),
                             width: 1,
                           ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: mentor.primaryColor.withOpacity(_glowAnimation.value * 0.5),
+                                  color: mentor.primaryColor.withValues(alpha: _glowAnimation.value * 0.5),
                               blurRadius: 15,
                               spreadRadius: 2,
                             ),
@@ -87,14 +87,14 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                         : null,
                   ),
                   child: ClipOval(
-                    child: Image.asset(
-                      mentor.avatarAsset,
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        // Fallback to gradient if image fails to load
-                        return Container(
+                        child: Image.asset(
+                          mentor.avatarAsset,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to gradient if image fails to load
+                            return Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topLeft,
@@ -105,26 +105,40 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                               ],
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              mentor.name[0],
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withValues(alpha: 0.5),
-                                    blurRadius: 2,
-                                  ),
-                                ],
+                              child: Center(
+                          child: Text(
+                            mentor.name[0],
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                        color: Colors.black.withValues(alpha: 0.5),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                            );
+                          },
                               ),
                             ),
                           ),
-                        );
-                      },
+                    const SizedBox(height: 4),
+                    Text(
+                      mentor.name,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
+                  ],
                 );
               },
             ),

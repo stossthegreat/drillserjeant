@@ -182,8 +182,8 @@ class _ChatScreenState extends State<ChatScreen> {
           // Fallback to generating new TTS
           final text = (message['text'] ?? '').toString();
           if (text.isNotEmpty) {
-            final mode = _personaToMode(persona);
-            await tts.speakDynamic(text, voiceVariant: mode);
+        final mode = _personaToMode(persona);
+        await tts.speakDynamic(text, voiceVariant: mode);
           }
         }
         break;

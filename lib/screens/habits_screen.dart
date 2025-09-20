@@ -225,7 +225,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     try {
       if (isCurrentlySelected) {
-        await apiClient.deselectForToday(itemId);
+        print('🗑️ Deselecting $itemId from today...');
+        final response = await apiClient.deselectForToday(itemId);
+        print('✅ Deselect response: $response');
         setState(() {
           if (isHabit) {
             selectedHabits.remove(itemId);
@@ -239,7 +241,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
           );
         }
       } else {
-        await apiClient.selectForToday(itemId);
+        print('✅ Selecting $itemId for today...');
+        final response = await apiClient.selectForToday(itemId);
+        print('✅ Select response: $response');
         setState(() {
           if (isHabit) {
             selectedHabits.add(itemId);
@@ -249,14 +253,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Added to today! Check Home tab.')),
+            const SnackBar(content: Text('✅ Added to today! Check Home tab.')),
           );
           // Navigate to home after adding with a refresh trigger
           context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
         }
       }
     } catch (e) {
-      print('Error toggling today selection: $e'); // Debug logging
+      print('❌ Error toggling today selection: $e'); // Debug logging
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
