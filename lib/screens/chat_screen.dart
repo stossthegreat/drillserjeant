@@ -57,21 +57,33 @@ class _ChatScreenState extends State<ChatScreen> {
       // Call real API with mentor personality
       final response = await apiClient.sendChatMessage(
         text.trim(),
-        mode: selectedMentor.id,
+        mode: _mentorToMode(selectedMentor.id),
       );
       
       final replyText = (response['reply'] ?? 'Acknowledged. Keep pushing.').toString();
-      final presetId = (response['audioPresetId'] ?? '').toString();
+      final voiceData = response['voice']; // New format
+      final audioPresetId = response['audioPresetId']; // Old format
       
       setState(() {
         chat.add({
           'role': 'sgt', 
           'text': replyText,
+          'voice': voiceData, // Store voice data with the message
+          'audioPresetId': audioPresetId, // Store preset ID for fallback
         });
         isLoading = false;
       });
       
-      // Optionally auto-speak if desired; for now keep manual via button
+      // Auto-play voice if available (try new format first, then old)
+      try {
+        if (voiceData is Map<String, dynamic> && voiceData['url'] != null) {
+          await tts.playFromUrl(voiceData['url'].toString());
+        } else if (audioPresetId != null && audioPresetId.toString().isNotEmpty) {
+          await tts.playPreset(audioPresetId.toString());
+        }
+      } catch (e) {
+        print('Auto-play voice error: $e');
+      }
       
     } catch (e) {
       // Surface error for debugging
@@ -97,6 +109,23 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  String _mentorToMode(String mentorId) {
+    switch (mentorId) {
+      case 'drill_sergeant':
+        return 'strict';
+      case 'marcus_aurelius':
+        return 'light';
+      case 'miyamoto_musashi':
+        return 'strict';
+      case 'confucius':
+        return 'balanced';
+      case 'abraham_lincoln':
+        return 'balanced';
+      default:
+        return 'balanced';
+    }
+  }
+
   String _craftReply(String msg) {
     final lower = msg.toLowerCase();
     switch (persona) {
@@ -119,9 +148,44 @@ class _ChatScreenState extends State<ChatScreen> {
     // Find last sgt message
     for (int i = chat.length - 1; i >= 0; i--) {
       if (chat[i]['role'] == 'sgt') {
-        final text = chat[i]['text'] ?? '';
-        final mode = _personaToMode(persona);
-        await tts.speakDynamic(text, voiceVariant: mode);
+        // Try to use stored voice first
+        final message = chat[i];
+        final voiceData = message['voice'];
+        final audioPresetId = message['audioPresetId'];
+        
+        bool voicePlayed = false;
+        
+        // Try new format first
+        if (voiceData is Map<String, dynamic>) {
+          final url = (voiceData as Map<String, dynamic>)['url'];
+          if (url is String && url.isNotEmpty) {
+            try {
+              await tts.playFromUrl(url);
+              voicePlayed = true;
+            } catch (e) {
+              print('Voice playback error: $e');
+            }
+          }
+        }
+        
+        // Try old format (audioPresetId)
+        if (!voicePlayed && audioPresetId != null && audioPresetId.toString().isNotEmpty) {
+          try {
+            await tts.playPreset(audioPresetId.toString());
+            voicePlayed = true;
+          } catch (e) {
+            print('Preset playback error: $e');
+          }
+        }
+        
+        if (!voicePlayed) {
+          // Fallback to generating new TTS
+          final text = (message['text'] ?? '').toString();
+          if (text.isNotEmpty) {
+            final mode = _personaToMode(persona);
+            await tts.speakDynamic(text, voiceVariant: mode);
+          }
+        }
         break;
       }
     }
