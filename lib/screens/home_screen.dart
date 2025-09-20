@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import '../design/glass.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (item['type'] == 'habit') {
         await apiClient.tickHabit(item['id']);
       } else {
-        await apiClient.tickTask(item['id']);
+        await apiClient.tickHabit(item['id']); // Use tickHabit for tasks too
       }
       
       // Remove from today backend list but keep in UI as completed
@@ -550,11 +551,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(width: 8),
                               if (!isCompleted) ...[
-                                GlassButton.ghost(
-                                  'Complete',
-                                  onPressed: () => _completeTodayItem(item),
-                                  icon: Icons.check,
-                                ),
+                                                              GlassButton.ghost(
+                              'Complete',
+                              onPressed: () => _completeTodayItem(item),
+                              icon: const Icon(Icons.check),
+                            ),
                                 const SizedBox(width: 4),
                                 IconButton(
                                   onPressed: () => _removeTodayItem(item),

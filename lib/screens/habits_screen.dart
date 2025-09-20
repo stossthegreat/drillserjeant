@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../design/glass.dart';
-import '../design/tokens.dart';
-import '../inputs/toggle_pills.dart';
-import '../design/charts/heatmap.dart';
-import "../design/feedback.dart";
 import "../services/api_client.dart";
 
 class HabitsScreen extends StatefulWidget {
@@ -32,7 +28,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
     try {
       apiClient.setAuthToken("valid-token");
       final habitsList = await apiClient.getHabits();
-      final tasksList = await apiClient.getTasks();
       
       // Load current today selections to show which items are already added
       final brief = await apiClient.getBriefToday();
@@ -49,8 +44,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
       }
       
       setState(() { 
-        habits = habitsList as List;
-        tasks = tasksList as List;
+        habits = habitsList;
+        tasks = []; // We'll add tasks later when we have the API method
         selectedHabits = todayHabitIds;
         selectedTasks = todayTaskIds;
         isLoading = false; 
@@ -95,7 +90,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     try {
       apiClient.setAuthToken("valid-token");
       final today = DateTime.now().toIso8601String().split('T')[0];
-      final created = await apiClient.createTask({
+      final created = await apiClient.createHabit({
         'title': title,
         'type': 'task',
         'schedule': { 'type': 'one_off', 'date': today },
@@ -164,7 +159,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               GlassButton.ghost(
                 isSelected ? 'Added to Today' : 'Add to Today',
                 onPressed: () => _toggleTodaySelection(habit),
-                icon: isSelected ? Icons.check : Icons.add,
+                icon: Icon(isSelected ? Icons.check : Icons.add),
               ),
             ],
           ),
@@ -196,7 +191,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               GlassButton.ghost(
                 isSelected ? 'Added to Today' : 'Add to Today',
                 onPressed: () => _toggleTodaySelection(task),
-                icon: isSelected ? Icons.check : Icons.add,
+                icon: Icon(isSelected ? Icons.check : Icons.add),
               ),
             ],
           ),
@@ -269,10 +264,12 @@ class _HabitsScreenState extends State<HabitsScreen> {
           const Text('Habits', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           const SizedBox(height: 12),
           ...habits.map((h) => _buildHabitItem(h)),
-          const SizedBox(height: 20),
-          const Text('Tasks', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 12),
-          ...tasks.map((t) => _buildTaskItem(t)),
+          if (tasks.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const Text('Tasks', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 12),
+            ...tasks.map((t) => _buildTaskItem(t)),
+          ],
         ],
       ),
     );
