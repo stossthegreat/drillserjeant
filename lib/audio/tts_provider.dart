@@ -6,6 +6,16 @@ class TtsProvider {
   String? _lastHash;
   final AudioPlayer _player = AudioPlayer();
 
+  Future<void> playFromUrl(String url) async {
+    try {
+      print('Playing audio from URL: $url'); // Debug log
+      await _player.stop();
+      await _player.play(UrlSource(url));
+    } catch (e) {
+      print('Play URL error: $e');
+    }
+  }
+
   Future<void> playPreset(String id) async {
     final _ = _lastHash; // keep analyzer happy
     try {
@@ -15,10 +25,16 @@ class TtsProvider {
       await _player.stop();
       if (url.startsWith('data:audio')) {
         final base64Data = url.split(',').last;
-        final bytes = base64Decode(base64Data);
-        await _player.play(BytesSource(bytes));
+        try {
+          final bytes = base64Decode(base64Data);
+          await _player.play(BytesSource(bytes));
+        } catch (e) {
+          print('Base64 decode error: $e');
+          // Fallback to treating as URL
+          await _player.play(UrlSource(url));
+        }
       } else {
-      await _player.play(UrlSource(url));
+        await _player.play(UrlSource(url));
       }
     } catch (e) {
       // ignore: avoid_print
@@ -30,15 +46,40 @@ class TtsProvider {
     _lastHash = base64Url.encode(utf8.encode('$voiceVariant:$text'));
     try {
       final res = await apiClient.ttsVoice(text, voice: voiceVariant);
-      final url = (res['url'] ?? res['audio']?['url'] ?? '').toString();
-      if (url.isEmpty) return;
+      print('TTS Response: $res'); // Debug log
+      
+      // Check multiple possible response structures
+      String url = '';
+      if (res['url'] != null && res['url'].toString().isNotEmpty) {
+        url = res['url'].toString();
+      } else if (res['audio'] != null && res['audio']['url'] != null) {
+        url = res['audio']['url'].toString();
+      } else if (res['voice'] != null && res['voice']['url'] != null) {
+        url = res['voice']['url'].toString();
+      }
+      
+      print('Audio URL: $url'); // Debug log
+      
+      if (url.isEmpty) {
+        print('No audio URL found in response');
+        return;
+      }
+      
       await _player.stop();
+      print('Playing audio from: $url'); // Debug log
+      
       if (url.startsWith('data:audio')) {
         final base64Data = url.split(',').last;
-        final bytes = base64Decode(base64Data);
-        await _player.play(BytesSource(bytes));
+        try {
+          final bytes = base64Decode(base64Data);
+          await _player.play(BytesSource(bytes));
+        } catch (e) {
+          print('Base64 decode error: $e');
+          // Fallback to treating as URL
+          await _player.play(UrlSource(url));
+        }
       } else {
-      await _player.play(UrlSource(url));
+        await _player.play(UrlSource(url));
       }
     } catch (e) {
       // ignore: avoid_print

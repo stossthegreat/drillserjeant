@@ -164,13 +164,14 @@ class ApiClient {
   }
 
   // ============ CHAT ============
-  Future<Map<String, dynamic>> sendChatMessage(String message, {String mode = 'balanced'}) async {
+  Future<Map<String, dynamic>> sendChatMessage(String message, {String mode = 'balanced', bool includeVoice = true}) async {
     final response = await http.post(
       Uri.parse('$baseUrl/v1/chat'),
       headers: _headers,
       body: json.encode({
         'message': message,
         'mode': mode,
+        'includeVoice': includeVoice,
       }),
     );
     
