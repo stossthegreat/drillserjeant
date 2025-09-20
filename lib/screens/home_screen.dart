@@ -43,11 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
         await apiClient.tickTask(item['id']);
       }
       
-      // Remove from today after completion
+      // Remove from today backend list but keep in UI as completed
       await apiClient.deselectForToday(item['id']);
       
       setState(() {
-        todayItems.removeWhere((i) => i['id'] == item['id']);
+        // Mark as completed instead of removing
+        final index = todayItems.indexWhere((i) => i['id'] == item['id']);
+        if (index != -1) {
+          todayItems[index]['completed'] = true;
+        }
       });
       
       if (mounted) {
@@ -491,56 +495,93 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       )
                     else
-                      ...todayItems.map((item) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[800]?.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      item['type'] == 'habit' 
-                                          ? Icons.fitness_center 
-                                          : Icons.task_alt,
-                                      color: Colors.blue[300],
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        item['name'] ?? 'Item',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
+                      ...todayItems.map((item) {
+                        final isCompleted = item['completed'] == true;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: isCompleted 
+                                        ? Colors.green[800]?.withOpacity(0.3)
+                                        : Colors.grey[800]?.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: isCompleted ? Border.all(
+                                      color: Colors.green[600]!.withOpacity(0.5),
+                                      width: 1,
+                                    ) : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isCompleted 
+                                            ? Icons.check_circle
+                                            : (item['type'] == 'habit' 
+                                                ? Icons.fitness_center 
+                                                : Icons.task_alt),
+                                        color: isCompleted 
+                                            ? Colors.green[300]
+                                            : Colors.blue[300],
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          isCompleted 
+                                              ? '✅ ${item['name'] ?? 'Item'}'
+                                              : item['name'] ?? 'Item',
+                                          style: TextStyle(
+                                            color: isCompleted 
+                                                ? Colors.green[200]
+                                                : Colors.white,
+                                            fontSize: 14,
+                                            decoration: isCompleted 
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            GlassButton.ghost(
-                              'Complete',
-                              onPressed: () => _completeTodayItem(item),
-                              icon: Icons.check,
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              onPressed: () => _removeTodayItem(item),
-                              icon: const Icon(Icons.remove_circle_outline),
-                              iconSize: 20,
-                              color: Colors.red[300],
-                            ),
-                          ],
-                        ),
-                      )).toList(),
+                              const SizedBox(width: 8),
+                              if (!isCompleted) ...[
+                                GlassButton.ghost(
+                                  'Complete',
+                                  onPressed: () => _completeTodayItem(item),
+                                  icon: Icons.check,
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  onPressed: () => _removeTodayItem(item),
+                                  icon: const Icon(Icons.remove_circle_outline),
+                                  iconSize: 20,
+                                  color: Colors.red[300],
+                                ),
+                              ] else
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[700]?.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'COMPLETED',
+                                    style: TextStyle(
+                                      color: Colors.green[300],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                   ],
                 ),
               ),
