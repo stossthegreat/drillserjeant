@@ -93,7 +93,7 @@ class _MentorSelectorState extends State<MentorSelector> with TickerProviderStat
                             width: 70,
                             height: 70,
                             fit: BoxFit.cover,
-                            alignment: Alignment.center,
+                            alignment: Alignment(0.0, -0.2), // Move faces down slightly
                             errorBuilder: (context, error, stackTrace) {
                             // Fallback to gradient if image fails to load
                             return Container(
