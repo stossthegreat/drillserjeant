@@ -77,11 +77,19 @@ class _HabitsScreenState extends State<HabitsScreen> {
       setState(() { 
         habits.add(created); 
       });
+      
+      // Automatically add new habit to today
+      try {
+        await apiClient.selectForToday(created['id']);
+      } catch (e) {
+        print('Error auto-selecting new habit: $e');
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Habit created')),
+          const SnackBar(content: Text('✅ Habit created and added to today!')),
         );
-        context.go('/home');
+        context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
       }
     } catch (e) {
       print('Error creating habit: $e'); // Debug logging
@@ -243,8 +251,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Added to today! Check Home tab.')),
           );
-          // Navigate to home after adding
-          context.go('/home');
+          // Navigate to home after adding with a refresh trigger
+          context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
         }
       }
     } catch (e) {
