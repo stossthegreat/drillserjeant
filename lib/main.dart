@@ -32,7 +32,7 @@ class DrillSergeantApp extends StatelessWidget {
         ShellRoute(
           builder: (context, state, child) => RootShell(child: child),
           routes: [
-            GoRoute(path: '/home', builder: (c, s) => const HomeScreen()),
+            GoRoute(path: '/home', builder: (c, s) => HomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
             GoRoute(path: '/habits', builder: (c, s) => const HabitsScreen()),
             GoRoute(path: '/habits/:id', builder: (c, s) => HabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/antihabits/:id', builder: (c, s) => AntiHabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
