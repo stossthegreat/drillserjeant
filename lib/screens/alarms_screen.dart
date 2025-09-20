@@ -29,15 +29,15 @@ class AlarmItem {
 
   factory AlarmItem.fromJson(Map<String, dynamic> json) {
     return AlarmItem(
-      id: json['id'],
-      label: json['label'],
-      rrule: json['rrule'],
-      tone: json['tone'],
-      enabled: json['enabled'] ?? true,
-      nextRun: json['nextRun'],
-      status: json['status'] ?? 'inactive',
-      timeUntilNext: json['timeUntilNext'],
-      metadata: json['metadata'],
+      id: (json['id'] ?? '').toString(),
+      label: (json['label'] ?? 'Alarm').toString(),
+      rrule: (json['rrule'] ?? '').toString(),
+      tone: (json['tone'] ?? 'balanced').toString(),
+      enabled: (json['enabled'] ?? true) == true,
+      nextRun: (json['nextRun'] ?? json['next_run'])?.toString(),
+      status: (json['status'] ?? 'inactive').toString(),
+      timeUntilNext: json['timeUntilNext'] is int ? json['timeUntilNext'] as int : int.tryParse((json['timeUntilNext'] ?? '').toString()),
+      metadata: (json['metadata'] is Map<String, dynamic>) ? json['metadata'] as Map<String, dynamic> : null,
     );
   }
 }
