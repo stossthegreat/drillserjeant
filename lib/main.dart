@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'design/theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/new_home_screen.dart';
 import 'screens/habits_screen.dart';
+import 'screens/new_habits_screen.dart';
 import 'screens/streaks_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/alarms_screen.dart';
@@ -45,8 +47,15 @@ class DrillSergeantApp extends StatelessWidget {
         ShellRoute(
           builder: (context, state, child) => RootShell(child: child),
           routes: [
-            GoRoute(path: '/home', builder: (c, s) => HomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
-            GoRoute(path: '/habits', builder: (c, s) => const HabitsScreen()),
+            // New UI screens (testing)
+            GoRoute(path: '/home', builder: (c, s) => NewHomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
+            GoRoute(path: '/habits', builder: (c, s) => const NewHabitsScreen()),
+            
+            // Old screens (backup)
+            GoRoute(path: '/home-old', builder: (c, s) => HomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
+            GoRoute(path: '/habits-old', builder: (c, s) => const HabitsScreen()),
+            
+            // Other screens unchanged
             GoRoute(path: '/habits/:id', builder: (c, s) => HabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/antihabits/:id', builder: (c, s) => AntiHabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/streaks', builder: (c, s) => const StreaksScreen()),

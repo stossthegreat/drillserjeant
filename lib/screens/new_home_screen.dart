@@ -1,0 +1,513 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../services/api_client.dart';
+import '../design/feedback.dart';
+
+class NewHomeScreen extends StatefulWidget {
+  final String? refreshTrigger;
+  
+  const NewHomeScreen({super.key, this.refreshTrigger});
+
+  @override
+  State<NewHomeScreen> createState() => _NewHomeScreenState();
+}
+
+class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateMixin {
+  // Core data
+  Map<String, dynamic> briefData = {};
+  List<dynamic> todayItems = [];
+  bool isLoading = true;
+  String? lastRefreshTrigger;
+  
+  // UI state
+  DateTime selectedDate = DateTime.now();
+  late AnimationController _progressController;
+  
+  // Date helpers
+  String formatDate(DateTime date) => date.toIso8601String().split('T')[0];
+  
+  List<DateTime> get weekDates {
+    final startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday % 7));
+    return List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    lastRefreshTrigger = widget.refreshTrigger;
+    _loadData();
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(NewHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshTrigger != null && widget.refreshTrigger != lastRefreshTrigger) {
+      lastRefreshTrigger = widget.refreshTrigger;
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    setState(() => isLoading = true);
+    try {
+      apiClient.setAuthToken('valid-token');
+      
+      // Load today's brief using existing endpoint
+      final briefResult = await apiClient.getBriefToday();
+      
+      setState(() {
+        briefData = briefResult;
+        todayItems = (briefResult['today'] as List?) ?? [];
+        isLoading = false;
+      });
+      
+      _progressController.forward();
+    } catch (e) {
+      print('❌ Error loading data: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _toggleCompletion(String itemId, String itemType, DateTime date) async {
+    final dateStr = formatDate(date);
+    try {
+      // Use existing API endpoints
+      if (itemType == 'habit') {
+        await apiClient.tickHabit(itemId, idempotencyKey: '${itemId}_$dateStr');
+      }
+      // Refresh data to get updated state
+      _loadData();
+      HapticFeedback.selectionClick();
+    } catch (e) {
+      print('❌ Error toggling completion: $e');
+    }
+  }
+
+  Widget _buildWeekStrip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // Month/Year header with arrows
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: () => setState(() {
+                  selectedDate = selectedDate.subtract(const Duration(days: 7));
+                }),
+                icon: const Icon(Icons.chevron_left, color: Colors.white),
+              ),
+              Text(
+                '${_monthName(selectedDate.month)} ${selectedDate.year}',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                onPressed: () => setState(() {
+                  selectedDate = selectedDate.add(const Duration(days: 7));
+                }),
+                icon: const Icon(Icons.chevron_right, color: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Week day buttons
+          Row(
+            children: weekDates.map((date) {
+              final isSelected = formatDate(date) == formatDate(selectedDate);
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => selectedDate = date),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF10B981) : const Color(0xFF121816),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? const Color(0xFF34D399) : Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          _dayAbbr(date.weekday),
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroSection() {
+    final user = briefData['user'] ?? {};
+    final streaksSummary = briefData['streaksSummary'] ?? {};
+    final xp = user['totalXP'] ?? 0;
+    final level = user['level'] ?? 1;
+    final rank = user['rank'] ?? 'Sergeant';
+    final streak = streaksSummary['currentStreak'] ?? 0;
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F201A), Color(0xFF12251E), Color(0xFF0F201A)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rank: $rank',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Level $level • Streak $streak days',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Progress bar
+                Container(
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: AnimatedBuilder(
+                      animation: _progressController,
+                      builder: (context, child) {
+                        return LinearProgressIndicator(
+                          value: _progressController.value * 0.65, // Sample progress
+                          backgroundColor: Colors.transparent,
+                          valueColor: const AlwaysStoppedAnimation(Color(0xFF10B981)),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$xp XP',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.local_fire_department, color: Color(0xFFF59E0B), size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      'Top 15% consistency',
+                      style: TextStyle(
+                        color: Color(0xFFF59E0B),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFocusCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // Today's Focus
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121816),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Today\'s Focus',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.emoji_events, color: Color(0xFF10B981), size: 20),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF10B981).withOpacity(0.2),
+                        const Color(0xFF34D399).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Start with the highest-intensity mission for ${_dayName(selectedDate.weekday)}.',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Today's Missions
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121816),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFF59E0B).withOpacity(0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Today\'s Missions',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.check_box, color: Color(0xFFF59E0B), size: 20),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFF59E0B).withOpacity(0.2),
+                        const Color(0xFFFBBF24).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _getMissionSummary(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getMissionSummary() {
+    final completed = todayItems.where((item) => item['completed'] == true).length;
+    if (completed == 0 && todayItems.isEmpty) {
+      return 'No missions for today 🎉';
+    }
+    return '$completed / ${todayItems.length} complete';
+  }
+
+  String _monthName(int month) {
+    const months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months[month];
+  }
+
+  String _dayAbbr(int weekday) {
+    const days = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[weekday];
+  }
+
+  String _dayName(int weekday) {
+    const days = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[weekday];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading && briefData.isEmpty) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0B0F0E),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF10B981)),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0F0E),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: CustomScrollView(
+          slivers: [
+            // Top bar
+            SliverAppBar(
+              backgroundColor: const Color(0xFF0B0F0E),
+              elevation: 0,
+              floating: true,
+              title: Row(
+                children: [
+                  const Icon(Icons.auto_awesome, color: Color(0xFF10B981), size: 24),
+                  const SizedBox(width: 8),
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF10B981), Color(0xFFF59E0B)],
+                    ).createShader(bounds),
+                    child: const Text(
+                      'Daily Orders',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () => Toast.show(context, 'Settings coming soon'),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.settings, color: Colors.white, size: 20),
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
+            ),
+            
+            // Content
+            SliverList(
+              delegate: SliverChildListDelegate([
+                _buildWeekStrip(),
+                const SizedBox(height: 24),
+                _buildHeroSection(),
+                const SizedBox(height: 24),
+                _buildFocusCards(),
+                const SizedBox(height: 120), // Bottom padding for nav
+              ]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+} 
