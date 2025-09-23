@@ -1,4 +1,4 @@
-// Project-level Gradle file. Keep it minimal; let Flutter manage plugin versions.
+// Project-level Gradle file — keep minimal to avoid version clashes.
 buildscript {
     repositories {
         google()
