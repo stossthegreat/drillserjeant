@@ -5,16 +5,15 @@ plugins {
 }
 
 flutter {
-    // Path to your Flutter project root
     source = "../.."
 }
 
 android {
-    namespace = "com.yourcompany.drillserjeant" // <-- set to your actual package
+    namespace = "com.yourcompany.drillserjeant" // set to your actual package
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.yourcompany.drillserjeant" // <-- match your actual package
+        applicationId = "com.yourcompany.drillserjeant" // set to your actual package
         minSdk = 23
         targetSdk = 34
         versionCode = 1
@@ -22,35 +21,32 @@ android {
     }
 
     buildTypes {
-        getByName("debug") {
-            // Use Kotlin DSL boolean props with 'is' prefix
-            isMinifyEnabled = false
-            // Ensure no resource shrinking is enabled in debug
-            // (sometimes templates toggle this; be explicit)
-            // isShrinkResources = false
+        // Force OFF resource shrinking everywhere to stop the hard fail
+        configureEach {
+            isShrinkResources = false
         }
-        getByName("release") {
-            // Build now: no code shrinking, no resource shrinking
+
+        // Debug
+        named("debug") {
             isMinifyEnabled = false
-            // IMPORTANT: resource shrinking requires minify to be true.
-            // Leave this OFF for now to avoid the error you saw.
-            // Turn ON later only if you also set isMinifyEnabled = true.
-            // See: https://developer.android.com/studio/build/shrink-code
-            // and https://developer.android.com/studio/build/shrink-code#shrink-resources
-            // Kotlin DSL property:
-            // isShrinkResources = true  <-- DO NOT enable unless minify is also true
+            isShrinkResources = false
+        }
+
+        // Release
+        named("release") {
+            // keep simple for now; we can enable minify later with proper keep rules
+            isMinifyEnabled = false
+            isShrinkResources = false
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
 
-            // If you have signing configs, uncomment and use them:
-            // signingConfig = signingConfigs.getByName("release")
+            // signingConfig = signingConfigs.getByName("release") // if you use one
         }
     }
 
-    // Avoid duplicate META-INF merges
     packaging {
         resources {
             excludes += setOf(
@@ -66,7 +62,6 @@ android {
         }
     }
 
-    // JDK 17 toolchains for AGP 8.x
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
