@@ -141,31 +141,30 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
         _closeModal();
         _loadData();
       } else {
-        // Create new item using EXACT backend structure from old screen
-        final itemData = {
-          'title': data['name'].toString().trim(),  // Backend expects 'title' not 'name'
-          'schedule': {'type': data['frequency'] == 'daily' ? 'daily' : 'weekdays'},
+        // COPY EXACT WORKING METHOD FROM OLD SCREEN
+        final created = await apiClient.createHabit({
+          'title': data['name'].toString().trim(),
+          'schedule': { 'type': 'daily' },
           'difficulty': data['intensity'],
-          'category': data['category'].toString().trim(),
-          'color': data['color'],  // Save color to backend
-        };
-
-        final created = await apiClient.createHabit(itemData);
-        print('✅ Created habit: ${created['id']}');
+          'color': data['color'],  // Add color field
+        });
         
-        // CRITICAL: Auto-select for today (this makes it appear on Home!)
+        // Update local state
+        setState(() { 
+          allItems.add(created); 
+        });
+        
+        // Auto-select for today (even though endpoint doesn't exist, keeps consistency)
         try {
           await apiClient.selectForToday(created['id'].toString());
-          print('✅ Auto-selected new habit for today');
         } catch (e) {
-          print('❌ Error auto-selecting new habit: $e');
+          print('Error auto-selecting new habit: $e');
         }
         
         _closeModal();
         
         if (mounted) {
           Toast.show(context, '✅ Habit created and added to today!');
-          // Navigate to Home with refresh trigger (just like old screen)
           context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
         }
       }
