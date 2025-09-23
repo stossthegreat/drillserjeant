@@ -1,18 +1,10 @@
-// File: android/build.gradle.kts
-
-plugins {
-    id("com.android.application") version "8.5.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.25" apply false
-    id("dev.flutter.flutter-gradle-plugin") version "1.0.0" apply false
-}
-
+// Project-level Gradle file. Keep it minimal; let Flutter manage plugin versions.
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
 }
-
 allprojects {
     repositories {
         google()
