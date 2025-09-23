@@ -93,11 +93,23 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
     try {
       apiClient.setAuthToken('valid-token');
       
-      // Load habits and other items using existing endpoints
+      // Load habits and tasks using existing endpoints
       final habitsResult = await apiClient.getHabits();
+      final tasksResult = await apiClient.getTasks();
+      
+      // Combine habits and tasks with type field
+      final List<dynamic> combinedItems = [];
+      combinedItems.addAll(habitsResult.map((habit) => {
+        ...habit,
+        'type': 'habit',
+      }));
+      combinedItems.addAll(tasksResult.map((task) => {
+        ...task,
+        'type': 'task',
+      }));
       
       setState(() {
-        allItems = habitsResult;
+        allItems = combinedItems;
         isLoading = false;
       });
     } catch (e) {
@@ -141,38 +153,88 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
         _closeModal();
         _loadData();
       } else {
-        // COPY EXACT WORKING METHOD FROM OLD SCREEN
-        final created = await apiClient.createHabit({
-          'title': data['name'].toString().trim(),
-          'schedule': { 'type': 'daily' },
-          'difficulty': data['intensity'],
-          'color': data['color'],  // Add color field
-          'reminderEnabled': data['reminderOn'],
-          'reminderTime': data['reminderTime'],
-        });
+        // Create new item based on type
+        dynamic created;
         
-        // INTEGRATE ALARM SYSTEM: Create alarm if reminder is enabled
-        if (data['reminderOn'] == true && data['reminderTime'] != null) {
-          try {
-            final timeParts = data['reminderTime'].toString().split(':');
-            final hour = int.parse(timeParts[0]);
-            final minute = int.parse(timeParts[1]);
-            
-            await apiClient.createAlarm({
-              'label': 'Habit: ${data['name'].toString().trim()}',
-              'rrule': 'FREQ=DAILY;BYHOUR=$hour;BYMINUTE=$minute',
-              'tone': data['intensity'] == 3 ? 'strict' : data['intensity'] == 2 ? 'balanced' : 'light',
-              'metadata': {
-                'type': 'habit_reminder',
-                'habitId': created['id'],
-                'habitName': data['name'].toString().trim(),
-              }
-            });
-            print('✅ Created alarm for habit reminder');
-          } catch (e) {
-            print('❌ Error creating alarm: $e');
-            // Don't fail the whole process if alarm creation fails
+        if (data['type'] == 'task') {
+          // CREATE TASK
+          created = await apiClient.createTask({
+            'title': data['name'].toString().trim(),
+            'description': data['category'] ?? '',
+            'dueDate': data['endDate'] ?? DateTime.now().add(const Duration(days: 1)).toIso8601String(),
+            'color': data['color'],
+            'reminderEnabled': data['reminderOn'],
+            'reminderTime': data['reminderTime'],
+            'priority': data['intensity'] == 3 ? 'high' : data['intensity'] == 2 ? 'medium' : 'low',
+          });
+          
+          // Create alarm for task reminder
+          if (data['reminderOn'] == true && data['reminderTime'] != null) {
+            try {
+              final timeParts = data['reminderTime'].toString().split(':');
+              final hour = int.parse(timeParts[0]);
+              final minute = int.parse(timeParts[1]);
+              
+              await apiClient.createAlarm({
+                'label': 'Task: ${data['name'].toString().trim()}',
+                'rrule': 'FREQ=ONCE',  // Tasks are one-time
+                'tone': data['intensity'] == 3 ? 'strict' : data['intensity'] == 2 ? 'balanced' : 'light',
+                'metadata': {
+                  'type': 'task_reminder',
+                  'taskId': created['id'],
+                  'taskName': data['name'].toString().trim(),
+                }
+              });
+              print('✅ Created alarm for task reminder');
+            } catch (e) {
+              print('❌ Error creating task alarm: $e');
+            }
           }
+          
+          Toast.show(context, '✅ Task created!');
+          
+        } else {
+          // CREATE HABIT (existing logic)
+          created = await apiClient.createHabit({
+            'title': data['name'].toString().trim(),
+            'schedule': { 'type': 'daily' },
+            'context': { 'difficulty': data['intensity'] },
+            'color': data['color'],
+            'reminderEnabled': data['reminderOn'],
+            'reminderTime': data['reminderTime'],
+          });
+          
+          // Create alarm for habit reminder
+          if (data['reminderOn'] == true && data['reminderTime'] != null) {
+            try {
+              final timeParts = data['reminderTime'].toString().split(':');
+              final hour = int.parse(timeParts[0]);
+              final minute = int.parse(timeParts[1]);
+              
+              await apiClient.createAlarm({
+                'label': 'Habit: ${data['name'].toString().trim()}',
+                'rrule': 'FREQ=DAILY;BYHOUR=$hour;BYMINUTE=$minute',
+                'tone': data['intensity'] == 3 ? 'strict' : data['intensity'] == 2 ? 'balanced' : 'light',
+                'metadata': {
+                  'type': 'habit_reminder',
+                  'habitId': created['id'],
+                  'habitName': data['name'].toString().trim(),
+                }
+              });
+              print('✅ Created alarm for habit reminder');
+            } catch (e) {
+              print('❌ Error creating habit alarm: $e');
+            }
+          }
+          
+          // Auto-select habit for today
+          try {
+            await apiClient.selectForToday(created['id'].toString());
+          } catch (e) {
+            print('Error auto-selecting new habit: $e');
+          }
+          
+          Toast.show(context, '✅ Habit created and added to today!');
         }
         
         // Update local state
@@ -180,17 +242,9 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
           allItems.add(created); 
         });
         
-        // Auto-select for today (even though endpoint doesn't exist, keeps consistency)
-        try {
-          await apiClient.selectForToday(created['id'].toString());
-        } catch (e) {
-          print('Error auto-selecting new habit: $e');
-        }
-        
         _closeModal();
         
         if (mounted) {
-          Toast.show(context, '✅ Habit created and added to today!');
           context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
         }
       }

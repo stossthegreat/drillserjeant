@@ -111,20 +111,43 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       print('📋 Today items count: ${(briefResult['today'] as List?)?.length ?? 0}');
       print('📋 Raw today data: ${briefResult['today']}');
       
-      // COPY EXACT FALLBACK LOGIC FROM OLD WORKING HOME SCREEN
+      // ENHANCED: Load habits and tasks from new backend response
       List<dynamic> today = briefResult['today'] ?? [];
-      if (today.isEmpty && briefResult['habits'] != null) {
-        final habits = briefResult['habits'] as List;
-        print('📋 Today is empty, using fallback with ${habits.length} habits');
-        // Use first 3 habits as today's items for now
-        today = habits.take(3).map((habit) => {
+      
+      // If today is empty, build from habits and tasks
+      if (today.isEmpty) {
+        final habits = briefResult['habits'] as List? ?? [];
+        final tasks = briefResult['tasks'] as List? ?? [];
+        
+        print('📋 Building today from ${habits.length} habits and ${tasks.length} tasks');
+        
+        // Add habits to today
+        today.addAll(habits.map((habit) => {
           'id': habit['id'],
           'name': habit['title'] ?? habit['name'],
           'type': 'habit',
           'completed': habit['status'] == 'completed',
           'streak': habit['streak'] ?? 0,
-        }).toList();
-        print('📋 Fallback today items: ${today.length}');
+          'color': habit['color'] ?? 'emerald',
+          'reminderEnabled': habit['reminderEnabled'] ?? false,
+          'reminderTime': habit['reminderTime'],
+        }));
+        
+        // Add tasks to today
+        today.addAll(tasks.map((task) => {
+          'id': task['id'],
+          'name': task['title'] ?? task['name'],
+          'type': 'task',
+          'completed': task['status'] == 'completed' || task['completed'] == true,
+          'dueDate': task['dueDate'],
+          'overdue': task['overdue'] ?? false,
+          'priority': task['priority'] ?? 'medium',
+          'color': task['color'] ?? 'amber',
+          'reminderEnabled': task['reminderEnabled'] ?? false,
+          'reminderTime': task['reminderTime'],
+        }));
+        
+        print('📋 Today items built: ${today.length} total');
       }
       
       setState(() {
@@ -146,6 +169,8 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       // Use existing API endpoints
       if (itemType == 'habit') {
         await apiClient.tickHabit(itemId, idempotencyKey: '${itemId}_$dateStr');
+      } else if (itemType == 'task') {
+        await apiClient.completeTask(itemId);
       }
       // Refresh data to get updated state
       _loadData();
@@ -239,9 +264,10 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   Widget _buildHeroSection() {
     final user = briefData['user'] ?? {};
     final streaksSummary = briefData['streaksSummary'] ?? {};
-    final xp = user['totalXP'] ?? 0;
+    final xp = user['xp'] ?? user['totalXP'] ?? 0;
     final level = user['level'] ?? 1;
     final rank = user['rank'] ?? 'Sergeant';
+    final mentorId = user['mentorId'] ?? 'drill-sergeant';
     final streak = streaksSummary['currentStreak'] ?? 0;
     
     return Container(
