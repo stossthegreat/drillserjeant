@@ -9,11 +9,11 @@ flutter {
 }
 
 android {
-    namespace = "com.yourcompany.drillserjeant"
+    namespace = "com.yourcompany.drillserjeant" // <-- set to your package
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.yourcompany.drillserjeant"
+        applicationId = "com.yourcompany.drillserjeant" // <-- match your package
         minSdk = 23
         targetSdk = 34
         versionCode = 1
@@ -26,6 +26,7 @@ android {
         }
         getByName("release") {
             isMinifyEnabled = false
+            // If you later enable minify, you can also enable:
             // isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -54,9 +55,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
 
 dependencies {
