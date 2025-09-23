@@ -5,36 +5,38 @@ plugins {
 }
 
 flutter {
+    // Path to your Flutter project root
     source = "../.."
 }
 
 android {
-    namespace = "com.yourcompany.drillserjeant" // set to your actual package
-    compileSdk = 34
+    // TODO: set this to your real package name
+    namespace = "com.yourcompany.drillserjeant"
+
+    // Path provider (and others) now compile against 36 — match it
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.yourcompany.drillserjeant" // set to your actual package
+        applicationId = "com.yourcompany.drillserjeant" // TODO: your real appId
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
+
         versionCode = 1
         versionName = "1.0"
     }
 
     buildTypes {
-        // Force OFF resource shrinking everywhere to stop the hard fail
+        // Hard-disable resource shrinking everywhere to avoid the earlier error
         configureEach {
             isShrinkResources = false
         }
 
-        // Debug
         named("debug") {
             isMinifyEnabled = false
             isShrinkResources = false
         }
-
-        // Release
         named("release") {
-            // keep simple for now; we can enable minify later with proper keep rules
+            // Keep it simple for now; we can enable minify later with proper keep rules
             isMinifyEnabled = false
             isShrinkResources = false
 
@@ -42,8 +44,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-
-            // signingConfig = signingConfigs.getByName("release") // if you use one
+            // If you have a release keystore config, set it here:
+            // signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -62,6 +64,7 @@ android {
         }
     }
 
+    // AGP 8.x wants Java 17
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
