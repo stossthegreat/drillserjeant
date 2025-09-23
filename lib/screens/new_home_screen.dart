@@ -65,9 +65,29 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       // Load today's brief using existing endpoint
       final briefResult = await apiClient.getBriefToday();
       
+      print('📋 Brief loaded: ${briefResult.keys}');
+      print('📋 Today items count: ${(briefResult['today'] as List?)?.length ?? 0}');
+      print('📋 Raw today data: ${briefResult['today']}');
+      
+      // COPY EXACT FALLBACK LOGIC FROM OLD WORKING HOME SCREEN
+      List<dynamic> today = briefResult['today'] ?? [];
+      if (today.isEmpty && briefResult['habits'] != null) {
+        final habits = briefResult['habits'] as List;
+        print('📋 Today is empty, using fallback with ${habits.length} habits');
+        // Use first 3 habits as today's items for now
+        today = habits.take(3).map((habit) => {
+          'id': habit['id'],
+          'name': habit['title'] ?? habit['name'],
+          'type': 'habit',
+          'completed': habit['status'] == 'completed',
+          'streak': habit['streak'] ?? 0,
+        }).toList();
+        print('📋 Fallback today items: ${today.length}');
+      }
+      
       setState(() {
         briefData = briefResult;
-        todayItems = (briefResult['today'] as List?) ?? [];
+        todayItems = today;
         isLoading = false;
       });
       
@@ -421,6 +441,143 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     return '$completed / ${todayItems.length} complete';
   }
 
+  Widget _buildTodayItems() {
+    if (todayItems.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121816),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
+        ),
+        child: const Center(
+          child: Text(
+            'No habits for today. Create one in the Habits tab!',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Today\'s Habits',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...todayItems.map((item) => _buildTodayItemCard(item)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayItemCard(Map<String, dynamic> item) {
+    final isCompleted = item['completed'] == true;
+    final itemName = item['name'] ?? item['title'] ?? 'Habit';
+    final streak = item['streak'] ?? 0;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF121816),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          // Icon
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF64748B),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isCompleted ? Icons.check : Icons.local_fire_department,
+              color: Colors.black,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  itemName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    decoration: isCompleted ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.local_fire_department, color: Color(0xFFF59E0B), size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$streak day streak',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          // Complete button
+          GestureDetector(
+            onTap: () => _toggleTodayItemCompletion(item),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isCompleted ? const Color(0xFF10B981) : Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isCompleted ? 'Done' : 'Complete',
+                style: TextStyle(
+                  color: isCompleted ? Colors.black : Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleTodayItemCompletion(Map<String, dynamic> item) async {
+    try {
+      await apiClient.tickHabit(item['id'].toString());
+      HapticFeedback.selectionClick();
+      _loadData(); // Refresh to get updated state
+    } catch (e) {
+      print('❌ Error toggling completion: $e');
+    }
+  }
+
   String _monthName(int month) {
     const months = ['', 'January', 'February', 'March', 'April', 'May', 'June',
                    'July', 'August', 'September', 'October', 'November', 'December'];
@@ -502,6 +659,8 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
                 _buildHeroSection(),
                 const SizedBox(height: 24),
                 _buildFocusCards(),
+                const SizedBox(height: 24),
+                _buildTodayItems(),
                 const SizedBox(height: 120), // Bottom padding for nav
               ]),
             ),
