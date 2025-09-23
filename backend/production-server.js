@@ -31,6 +31,206 @@ const mockFirebase = {
 
 const firebase = process.env.FIREBASE_PRIVATE_KEY ? admin : mockFirebase;
 
+// ============ MENTOR PERSONALITIES ============
+const MENTORS = {
+  'drill-sergeant': {
+    id: 'drill-sergeant',
+    name: 'Drill Sergeant',
+    personality: 'strict',
+    voice: 'strict',
+    nudges: {
+      low_progress: [
+        "DROP AND GIVE ME TWENTY! Your progress is pathetic today!",
+        "What's your excuse, recruit? GET MOVING!",
+        "I've seen snails move faster than your progress today!",
+        "UNACCEPTABLE! You're falling behind - time to catch up!"
+      ],
+      high_progress: [
+        "Outstanding work, soldier! Keep that momentum!",
+        "Now THAT'S what I call discipline! Carry on!",
+        "Excellent execution! You're setting the standard!",
+        "HOOAH! That's the spirit I want to see!"
+      ],
+      streak_risk: [
+        "Your streak is in DANGER! Don't let it die on my watch!",
+        "MOVE MOVE MOVE! Save that streak before it's too late!",
+        "This is not a drill! Your streak needs immediate attention!"
+      ]
+    }
+  },
+  'marcus-aurelius': {
+    id: 'marcus-aurelius',
+    name: 'Marcus Aurelius',
+    personality: 'balanced',
+    voice: 'balanced',
+    nudges: {
+      low_progress: [
+        "Remember, what we do now echoes in eternity. Rise to the occasion.",
+        "The impediment to action advances action. What stands in the way becomes the way.",
+        "You have power over your mind - not outside events. Realize this, and you will find strength.",
+        "Waste no more time arguing what a good person should be. Be one."
+      ],
+      high_progress: [
+        "Well done. Your commitment to virtue shines through your actions.",
+        "The universe is change; our life is what our thoughts make it. Yours are noble.",
+        "You are making progress on the path of wisdom and self-discipline.",
+        "Excellence is never an accident. It is the result of high intention and skillful execution."
+      ],
+      streak_risk: [
+        "A setback is a setup for a comeback. Tend to your discipline.",
+        "The best revenge is not to be like your enemy. Rise above the moment.",
+        "What brings no benefit to the hive brings no benefit to the bee. Act now."
+      ]
+    }
+  },
+  'buddha': {
+    id: 'buddha',
+    name: 'Buddha',
+    personality: 'light',
+    voice: 'light',
+    nudges: {
+      low_progress: [
+        "The mind is everything. What you think you become. Think progress.",
+        "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.",
+        "If you are facing in the right direction, all you need to do is keep on walking.",
+        "Peace comes from within. Do not seek it without. But do seek progress within."
+      ],
+      high_progress: [
+        "Well done. Your mindful actions create positive karma.",
+        "Thousands of candles can be lighted from a single candle. Your discipline inspires others.",
+        "The way is not in the sky. The way is in the heart. Your heart shows the way.",
+        "Happiness does not depend on what you have. It depends on what you are becoming."
+      ],
+      streak_risk: [
+        "Even the Buddha had to start somewhere. Begin again with compassion.",
+        "A moment of mindfulness can save a lifetime of regret. Act with awareness.",
+        "The root of suffering is attachment. Let go of perfectionism, but not progress."
+      ]
+    }
+  }
+};
+
+// AI Nudge tracking
+const lastNudges = new Map(); // userId -> { lastNudge: timestamp, type: string }
+
+// Removed duplicate - keeping the first instance above
+
+// ============ AI NUDGE SYSTEM ============
+function calculateDailyProgress(userId) {
+  const userHabits = habits.filter(h => h.userId === userId);
+  const userTasks = tasks.filter(t => t.userId === userId);
+  const today = new Date().toDateString();
+  
+  // Calculate habit completion rate
+  const completedHabits = userHabits.filter(h => 
+    h.lastTick && new Date(h.lastTick).toDateString() === today
+  ).length;
+  
+  // Calculate task completion rate (due today)
+  const todayTasks = userTasks.filter(t => {
+    const dueDate = new Date(t.dueDate).toDateString();
+    return dueDate === today;
+  });
+  const completedTasks = todayTasks.filter(t => t.completed).length;
+  
+  const totalItems = userHabits.length + todayTasks.length;
+  const completedItems = completedHabits + completedTasks;
+  
+  const progressPercent = totalItems > 0 ? (completedItems / totalItems) * 100 : 100;
+  
+  return {
+    progressPercent,
+    completedHabits,
+    totalHabits: userHabits.length,
+    completedTasks,
+    totalTasks: todayTasks.length,
+    streaksAtRisk: userHabits.filter(h => h.streak > 7 && !h.lastTick || 
+      new Date(h.lastTick).toDateString() !== today).length
+  };
+}
+
+function generateAINudge(userId, progressData, mentorId = 'drill-sergeant') {
+  const mentor = MENTORS[mentorId] || MENTORS['drill-sergeant'];
+  const { progressPercent, streaksAtRisk } = progressData;
+  
+  let nudgeType = 'balanced';
+  let messages = mentor.nudges.high_progress;
+  
+  if (streaksAtRisk > 0) {
+    nudgeType = 'streak_risk';
+    messages = mentor.nudges.streak_risk;
+  } else if (progressPercent < 30) {
+    nudgeType = 'low_progress';
+    messages = mentor.nudges.low_progress;
+  } else if (progressPercent > 70) {
+    nudgeType = 'high_progress';
+    messages = mentor.nudges.high_progress;
+  }
+  
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  
+  return {
+    type: nudgeType,
+    message: randomMessage,
+    mentorId,
+    mentorName: mentor.name,
+    progressPercent: Math.round(progressPercent),
+    voice: mentor.voice,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function shouldSendNudge(userId) {
+  const lastNudge = lastNudges.get(userId);
+  if (!lastNudge) return true;
+  
+  const hoursSinceLastNudge = (Date.now() - new Date(lastNudge.lastNudge).getTime()) / (1000 * 60 * 60);
+  
+  // Send nudge if it's been more than 4 hours, or if it's a new day
+  return hoursSinceLastNudge > 4 || new Date().toDateString() !== new Date(lastNudge.lastNudge).toDateString();
+}
+
+function generateAINudge(userId, progressData, mentorId = 'drill-sergeant') {
+  const mentor = MENTORS[mentorId] || MENTORS['drill-sergeant'];
+  const { progressPercent, streaksAtRisk } = progressData;
+  
+  let nudgeType = 'balanced';
+  let messages = mentor.nudges.high_progress;
+  
+  if (streaksAtRisk > 0) {
+    nudgeType = 'streak_risk';
+    messages = mentor.nudges.streak_risk;
+  } else if (progressPercent < 30) {
+    nudgeType = 'low_progress';
+    messages = mentor.nudges.low_progress;
+  } else if (progressPercent > 70) {
+    nudgeType = 'high_progress';
+    messages = mentor.nudges.high_progress;
+  }
+  
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  
+  return {
+    type: nudgeType,
+    message: randomMessage,
+    mentorId,
+    mentorName: mentor.name,
+    progressPercent: Math.round(progressPercent),
+    voice: mentor.voice,
+    timestamp: new Date().toISOString()
+  };
+}
+
+function shouldSendNudge(userId) {
+  const lastNudge = lastNudges.get(userId);
+  if (!lastNudge) return true;
+  
+  const hoursSinceLastNudge = (Date.now() - new Date(lastNudge.lastNudge).getTime()) / (1000 * 60 * 60);
+  
+  // Send nudge if it's been more than 4 hours, or if it's a new day
+  return hoursSinceLastNudge > 4 || new Date().toDateString() !== new Date(lastNudge.lastNudge).toDateString();
+}
+
 // Register plugins
 fastify.register(require('@fastify/cors'), { origin: true });
 fastify.register(require('@fastify/swagger'), {
@@ -543,6 +743,80 @@ fastify.post('/v1/chat', {
   const response = await generateAIResponse(userId, message, mode, context);
   
   return response;
+});
+
+// AI Nudge endpoint
+fastify.get('/v1/nudge', {
+  schema: {
+    tags: ['AI'],
+    summary: 'Get AI nudge based on daily progress',
+    security: [{ bearerAuth: [] }]
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const userId = request.user.id;
+  const user = users[userId];
+  
+  // Check if we should send a nudge
+  if (!shouldSendNudge(userId)) {
+    return { nudge: null, message: 'No nudge needed at this time' };
+  }
+  
+  // Calculate progress
+  const progressData = calculateDailyProgress(userId);
+  
+  // Generate mentor-specific nudge
+  const mentorId = user.mentorId || 'drill-sergeant';
+  const nudge = generateAINudge(userId, progressData, mentorId);
+  
+  // Track this nudge
+  lastNudges.set(userId, { lastNudge: new Date().toISOString(), type: nudge.type });
+  
+  // Log nudge event
+  logEvent(userId, 'ai_nudge_sent', {
+    nudgeType: nudge.type,
+    mentorId,
+    progressPercent: nudge.progressPercent
+  });
+  
+  return { nudge };
+});
+
+// AI Nudge endpoint
+fastify.get('/v1/nudge', {
+  schema: {
+    tags: ['AI'],
+    summary: 'Get AI nudge based on daily progress',
+    security: [{ bearerAuth: [] }]
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const userId = request.user.id;
+  const user = users[userId];
+  
+  // Check if we should send a nudge
+  if (!shouldSendNudge(userId)) {
+    return { nudge: null, message: 'No nudge needed at this time' };
+  }
+  
+  // Calculate progress
+  const progressData = calculateDailyProgress(userId);
+  
+  // Generate mentor-specific nudge
+  const mentorId = user.mentorId || 'drill-sergeant';
+  const nudge = generateAINudge(userId, progressData, mentorId);
+  
+  // Track this nudge
+  lastNudges.set(userId, { lastNudge: new Date().toISOString(), type: nudge.type });
+  
+  // Log nudge event
+  logEvent(userId, 'ai_nudge_sent', {
+    nudgeType: nudge.type,
+    mentorId,
+    progressPercent: nudge.progressPercent
+  });
+  
+  return { nudge };
 });
 
 // Voice endpoints

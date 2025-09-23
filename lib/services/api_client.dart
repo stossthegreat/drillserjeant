@@ -282,6 +282,33 @@ class ApiClient {
     }
   }
 
+  // ============ AI NUDGES ============
+  Future<Map<String, dynamic>> getNudge() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/nudge'),
+      headers: _headers,
+    );
+    
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to get nudge: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getWeeklyReport() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/report/weekly'),
+      headers: _headers,
+    );
+    
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to get weekly report: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ============ ALARMS ============
   Future<List<dynamic>> getAlarms() async {
     final response = await http.get(

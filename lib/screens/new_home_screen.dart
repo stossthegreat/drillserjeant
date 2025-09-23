@@ -107,6 +107,14 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       // Load today's brief using existing endpoint
       final briefResult = await apiClient.getBriefToday();
       
+      // Load AI nudge if available
+      Map<String, dynamic>? nudgeResult;
+      try {
+        nudgeResult = await apiClient.getNudge();
+      } catch (e) {
+        print('⚠️ No nudge available: $e');
+      }
+      
       print('📋 Brief loaded: ${briefResult.keys}');
       print('📋 Today items count: ${(briefResult['today'] as List?)?.length ?? 0}');
       print('📋 Raw today data: ${briefResult['today']}');
