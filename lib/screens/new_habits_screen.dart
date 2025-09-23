@@ -147,7 +147,33 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
           'schedule': { 'type': 'daily' },
           'difficulty': data['intensity'],
           'color': data['color'],  // Add color field
+          'reminderEnabled': data['reminderOn'],
+          'reminderTime': data['reminderTime'],
         });
+        
+        // INTEGRATE ALARM SYSTEM: Create alarm if reminder is enabled
+        if (data['reminderOn'] == true && data['reminderTime'] != null) {
+          try {
+            final timeParts = data['reminderTime'].toString().split(':');
+            final hour = int.parse(timeParts[0]);
+            final minute = int.parse(timeParts[1]);
+            
+            await apiClient.createAlarm({
+              'label': 'Habit: ${data['name'].toString().trim()}',
+              'rrule': 'FREQ=DAILY;BYHOUR=$hour;BYMINUTE=$minute',
+              'tone': data['intensity'] == 3 ? 'strict' : data['intensity'] == 2 ? 'balanced' : 'light',
+              'metadata': {
+                'type': 'habit_reminder',
+                'habitId': created['id'],
+                'habitName': data['name'].toString().trim(),
+              }
+            });
+            print('✅ Created alarm for habit reminder');
+          } catch (e) {
+            print('❌ Error creating alarm: $e');
+            // Don't fail the whole process if alarm creation fails
+          }
+        }
         
         // Update local state
         setState(() { 

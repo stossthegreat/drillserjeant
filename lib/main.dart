@@ -7,7 +7,7 @@ import 'screens/habits_screen.dart';
 import 'screens/new_habits_screen.dart';
 import 'screens/streaks_screen.dart';
 import 'screens/chat_screen.dart';
-import 'screens/alarms_screen.dart';
+// import 'screens/alarms_screen.dart'; // Removed - alarms now integrated into habits
 import 'screens/settings_screen.dart';
 import 'screens/design_gallery.dart';
 import 'widgets/root_shell.dart';
@@ -60,7 +60,7 @@ class DrillSergeantApp extends StatelessWidget {
             GoRoute(path: '/antihabits/:id', builder: (c, s) => AntiHabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/streaks', builder: (c, s) => const StreaksScreen()),
             GoRoute(path: '/chat', builder: (c, s) => const ChatScreen()),
-            GoRoute(path: '/alarms', builder: (c, s) => const AlarmsScreen()),
+            // GoRoute(path: '/alarms', builder: (c, s) => const AlarmsScreen()), // Removed - alarms integrated into habits
             GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
           ],
         ),

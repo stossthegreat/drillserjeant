@@ -9,8 +9,7 @@ class RootShell extends StatelessWidget {
     if (loc.startsWith('/habits')) return 1;
     if (loc.startsWith('/streaks')) return 2;
     if (loc.startsWith('/chat')) return 3;
-    if (loc.startsWith('/alarms')) return 4;
-    if (loc.startsWith('/settings')) return 5;
+    if (loc.startsWith('/settings')) return 4;
     return 0; // home
   }
 
@@ -28,7 +27,6 @@ class RootShell extends StatelessWidget {
           NavigationDestination(icon: Icon(Icons.check_box_outlined), selectedIcon: Icon(Icons.check_box), label: 'Habits'),
           NavigationDestination(icon: Icon(Icons.local_fire_department_outlined), selectedIcon: Icon(Icons.local_fire_department), label: 'Streaks'),
           NavigationDestination(icon: Icon(Icons.military_tech_outlined), selectedIcon: Icon(Icons.military_tech), label: 'Sergeant'),
-          NavigationDestination(icon: Icon(Icons.alarm_outlined), selectedIcon: Icon(Icons.alarm), label: 'Alarms'),
           NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: 'Settings'),
         ],
         onDestinationSelected: (i) {
@@ -37,8 +35,7 @@ class RootShell extends StatelessWidget {
             case 1: context.go('/habits'); break;
             case 2: context.go('/streaks'); break;
             case 3: context.go('/chat'); break;
-            case 4: context.go('/alarms'); break;
-            case 5: context.go('/settings'); break;
+            case 4: context.go('/settings'); break;
           }
         },
       ),

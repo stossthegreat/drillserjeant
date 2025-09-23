@@ -551,6 +551,8 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     final streak = item['streak'] ?? 0;
     final itemColor = _getColorForItem(item);
     final neonColor = _getNeonColorForItem(item);
+    final hasReminder = item['reminderEnabled'] == true;
+    final reminderTime = item['reminderTime'];
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -626,6 +628,32 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
                         fontSize: 12,
                       ),
                     ),
+                    if (hasReminder && reminderTime != null) ...[
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: neonColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: neonColor.withOpacity(0.6)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.alarm, color: neonColor, size: 12),
+                            const SizedBox(width: 4),
+                            Text(
+                              reminderTime.toString(),
+                              style: TextStyle(
+                                color: neonColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
