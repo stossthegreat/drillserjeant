@@ -23,12 +23,54 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   DateTime selectedDate = DateTime.now();
   late AnimationController _progressController;
   
+  // Color options matching React design
+  final List<Map<String, dynamic>> colorOptions = [
+    {'name': 'emerald', 'color': const Color(0xFF10B981), 'neon': const Color(0xFF34D399)},
+    {'name': 'amber', 'color': const Color(0xFFF59E0B), 'neon': const Color(0xFFFBBF24)},
+    {'name': 'sky', 'color': const Color(0xFF0EA5E9), 'neon': const Color(0xFF38BDF8)},
+    {'name': 'rose', 'color': const Color(0xFFE11D48), 'neon': const Color(0xFFF43F5E)},
+    {'name': 'violet', 'color': const Color(0xFF8B5CF6), 'neon': const Color(0xFFA78BFA)},
+    {'name': 'slate', 'color': const Color(0xFF64748B), 'neon': const Color(0xFF94A3B8)},
+  ];
+
   // Date helpers
   String formatDate(DateTime date) => date.toIso8601String().split('T')[0];
   
   List<DateTime> get weekDates {
     final startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday % 7));
     return List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
+  }
+
+  Color _getColorForItem(dynamic item) {
+    final colorName = item['color'] ?? 'emerald';
+    return colorOptions.firstWhere(
+      (c) => c['name'] == colorName,
+      orElse: () => colorOptions[0],
+    )['color'];
+  }
+
+  Color _getNeonColorForItem(dynamic item) {
+    final colorName = item['color'] ?? 'emerald';
+    return colorOptions.firstWhere(
+      (c) => c['name'] == colorName,
+      orElse: () => colorOptions[0],
+    )['neon'];
+  }
+
+  Color _getColorForItem(dynamic item) {
+    final colorName = item['color'] ?? 'emerald';
+    return colorOptions.firstWhere(
+      (c) => c['name'] == colorName,
+      orElse: () => colorOptions[0],
+    )['color'];
+  }
+
+  Color _getNeonColorForItem(dynamic item) {
+    final colorName = item['color'] ?? 'emerald';
+    return colorOptions.firstWhere(
+      (c) => c['name'] == colorName,
+      orElse: () => colorOptions[0],
+    )['neon'];
   }
 
   @override
@@ -461,21 +503,43 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       );
     }
 
+    // Separate habits and tasks
+    final habits = todayItems.where((item) => item['type'] == 'habit' || item['type'] == null).toList();
+    final tasks = todayItems.where((item) => item['type'] == 'task').toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Today\'s Habits',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+          // Habits section
+          if (habits.isNotEmpty) ...[
+            const Text(
+              'Today\'s Habits',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          ...todayItems.map((item) => _buildTodayItemCard(item)),
+            const SizedBox(height: 12),
+            ...habits.map((item) => _buildTodayItemCard(item)),
+            const SizedBox(height: 20),
+          ],
+          
+          // Tasks section  
+          if (tasks.isNotEmpty) ...[
+            const Text(
+              'Today\'s Tasks',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...tasks.map((item) => _buildTodayItemCard(item)),
+          ],
         ],
       ),
     );
@@ -485,14 +549,31 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     final isCompleted = item['completed'] == true;
     final itemName = item['name'] ?? item['title'] ?? 'Habit';
     final streak = item['streak'] ?? 0;
+    final itemColor = _getColorForItem(item);
+    final neonColor = _getNeonColorForItem(item);
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF121816),
+        gradient: LinearGradient(
+          colors: [
+            itemColor.withOpacity(0.2),
+            itemColor.withOpacity(0.1),
+            const Color(0xFF121816),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: neonColor.withOpacity(0.6), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: neonColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -501,8 +582,15 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: isCompleted ? const Color(0xFF10B981) : const Color(0xFF64748B),
+              color: isCompleted ? neonColor : itemColor,
               borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: (isCompleted ? neonColor : itemColor).withOpacity(0.4),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               isCompleted ? Icons.check : Icons.local_fire_department,
@@ -529,12 +617,12 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.local_fire_department, color: Color(0xFFF59E0B), size: 14),
+                    Icon(Icons.local_fire_department, color: neonColor, size: 14),
                     const SizedBox(width: 4),
                     Text(
                       '$streak day streak',
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: neonColor.withOpacity(0.8),
                         fontSize: 12,
                       ),
                     ),
@@ -550,8 +638,16 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isCompleted ? const Color(0xFF10B981) : Colors.white.withOpacity(0.1),
+                color: isCompleted ? neonColor : itemColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: neonColor.withOpacity(0.8)),
+                boxShadow: [
+                  BoxShadow(
+                    color: neonColor.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Text(
                 isCompleted ? 'Done' : 'Complete',
