@@ -819,6 +819,81 @@ fastify.get('/v1/nudge', {
   return { nudge };
 });
 
+// Weekly Report endpoint
+fastify.get('/v1/report/weekly', {
+  schema: {
+    tags: ['Reports'],
+    summary: 'Get weekly progress report with AI insights',
+    security: [{ bearerAuth: [] }]
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const userId = request.user.id;
+  const user = users[userId];
+  const userHabits = habits.filter(h => h.userId === userId);
+  const userTasks = tasks.filter(t => t.userId === userId);
+  
+  // Calculate weekly stats
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - 7);
+  
+  const thisWeekEvents = events.filter(e => 
+    e.userId === userId && 
+    new Date(e.ts) >= weekStart &&
+    (e.type === 'habit_tick' || e.type === 'task_completed')
+  );
+  
+  const completedHabits = thisWeekEvents.filter(e => e.type === 'habit_tick').length;
+  const completedTasks = thisWeekEvents.filter(e => e.type === 'task_completed').length;
+  const totalPossibleHabits = userHabits.length * 7; // 7 days
+  const completionRate = totalPossibleHabits > 0 ? (completedHabits / totalPossibleHabits) * 100 : 0;
+  
+  // Generate AI insights based on mentor
+  const mentorId = user.mentorId || 'drill-sergeant';
+  const mentor = MENTORS[mentorId];
+  
+  let insight = "Keep pushing forward with consistency.";
+  if (completionRate > 80) {
+    insight = mentor.nudges.high_progress[0];
+  } else if (completionRate < 40) {
+    insight = mentor.nudges.low_progress[0];
+  }
+  
+  // XP and achievements this week
+  const userAchievementsList = userAchievements.get(userId) || [];
+  const weeklyXP = userAchievementsList
+    .filter(a => new Date(a.unlockedAt) >= weekStart)
+    .reduce((sum, a) => sum + a.xp, 0);
+  
+  return {
+    period: {
+      start: weekStart.toISOString(),
+      end: new Date().toISOString()
+    },
+    stats: {
+      completedHabits,
+      completedTasks,
+      totalPossibleHabits,
+      completionRate: Math.round(completionRate),
+      weeklyXP,
+      newAchievements: userAchievementsList.filter(a => new Date(a.unlockedAt) >= weekStart).length
+    },
+    insights: {
+      mentorName: mentor.name,
+      message: insight,
+      recommendation: completionRate > 60 ? 
+        "You're on a great path. Consider adding one more challenging habit." :
+        "Focus on consistency with your current habits before adding new ones."
+    },
+    streaks: {
+      longest: Math.max(...userHabits.map(h => h.streak), 0),
+      active: userHabits.filter(h => h.streak > 0).length,
+      atRisk: userHabits.filter(h => h.streak > 7 && (!h.lastTick || 
+        new Date(h.lastTick).toDateString() !== new Date().toDateString())).length
+    }
+  };
+});
+
 // Voice endpoints
 fastify.get('/v1/voice/preset/:id', {
   schema: {
