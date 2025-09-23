@@ -60,6 +60,7 @@ const users = {
     consentRoast: false,
     plan: 'PRO',
     tz: 'America/New_York',
+    mentorId: 'drill-sergeant',
     createdAt: '2024-01-01T00:00:00Z',
     features: { 
       canUseDynamicTts: true, 
@@ -86,6 +87,9 @@ const habits = [
     schedule: { time: '07:00', days: ['mon', 'tue', 'wed', 'thu', 'fri'] }, 
     lastTick: new Date().toISOString(),
     context: { difficulty: 2, category: 'fitness', lifeDays: 0.5 },
+    color: 'emerald',
+    reminderEnabled: true,
+    reminderTime: '07:00',
     createdAt: '2024-01-01T00:00:00Z'
   },
   { 
@@ -96,7 +100,27 @@ const habits = [
     schedule: { time: '20:00', days: ['daily'] }, 
     lastTick: new Date().toISOString(),
     context: { difficulty: 1, category: 'learning', lifeDays: 0.3 },
+    color: 'sky',
+    reminderEnabled: true,
+    reminderTime: '20:00',
     createdAt: '2024-01-01T00:00:00Z'
+  }
+];
+
+// Task model - separate from habits with due dates
+const tasks = [
+  {
+    id: 'task-1',
+    userId: 'demo-user-123',
+    title: 'Organize files',
+    description: 'Clean up desktop and documents',
+    dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
+    completed: false,
+    color: 'amber',
+    reminderEnabled: true,
+    reminderTime: '18:00',
+    priority: 'medium',
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -623,6 +647,11 @@ fastify.get('/v1/brief/today', {
     },
     
     habits: habitsToday,
+    tasks: tasks.filter(t => t.userId === userId).map(task => ({
+      ...task,
+      status: task.completed ? 'completed' : 'pending',
+      overdue: new Date(task.dueDate) < new Date() && !task.completed
+    })),
     antiHabits: antiHabits.filter(a => a.userId === userId),
     
     achievements: {
@@ -654,6 +683,60 @@ fastify.get('/v1/habits', {
     status: habit.lastTick && new Date(habit.lastTick).toDateString() === new Date().toDateString() 
       ? 'completed_today' : 'pending'
   }));
+});
+
+// CRITICAL FIX: Add missing habit creation endpoint
+fastify.post('/v1/habits', {
+  schema: {
+    tags: ['Habits'],
+    summary: 'Create new habit',
+    security: [{ bearerAuth: [] }],
+    body: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        schedule: { type: 'object' },
+        context: { type: 'object' },
+        color: { type: 'string' },
+        reminderEnabled: { type: 'boolean' },
+        reminderTime: { type: 'string' }
+      },
+      required: ['title']
+    },
+    response: { 201: { type: 'object' } }
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const { 
+    title, 
+    schedule = {}, 
+    context = {},
+    color = 'emerald',
+    reminderEnabled = false,
+    reminderTime = null
+  } = request.body;
+  
+  const habit = {
+    id: `habit-${Date.now()}`,
+    userId: request.user.id,
+    title,
+    schedule,
+    context: { difficulty: 1, category: 'general', lifeDays: 0.2, ...context },
+    color,
+    reminderEnabled,
+    reminderTime,
+    streak: 0,
+    lastTick: null,
+    createdAt: new Date().toISOString()
+  };
+  
+  habits.push(habit);
+  
+  // Log creation event
+  logEvent(request.user.id, 'habit_created', { habitId: habit.id, title });
+  
+  reply.code(201);
+  return habit;
 });
 
 fastify.post('/v1/habits/:id/tick', {
@@ -698,6 +781,208 @@ fastify.post('/v1/habits/:id/tick', {
     idempotent: alreadyTickedToday,
     achievements: newAchievements,
     celebrationReady: newAchievements.length > 0
+  };
+});
+
+// ============ TASK ENDPOINTS ============
+fastify.get('/v1/tasks', {
+  schema: { tags: ['Tasks'], security: [{ bearerAuth: [] }] },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const userTasks = tasks.filter(t => t.userId === request.user.id);
+  return userTasks.map(task => ({
+    ...task,
+    status: task.completed ? 'completed' : 'pending',
+    overdue: new Date(task.dueDate) < new Date() && !task.completed
+  }));
+});
+
+fastify.post('/v1/tasks', {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Create new task',
+    security: [{ bearerAuth: [] }],
+    body: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        dueDate: { type: 'string' },
+        color: { type: 'string' },
+        reminderEnabled: { type: 'boolean' },
+        reminderTime: { type: 'string' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'] }
+      },
+      required: ['title']
+    },
+    response: { 201: { type: 'object' } }
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const { 
+    title, 
+    description = '',
+    dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Default: tomorrow
+    color = 'amber',
+    reminderEnabled = false,
+    reminderTime = null,
+    priority = 'medium'
+  } = request.body;
+  
+  const task = {
+    id: `task-${Date.now()}`,
+    userId: request.user.id,
+    title,
+    description,
+    dueDate,
+    completed: false,
+    color,
+    reminderEnabled,
+    reminderTime,
+    priority,
+    createdAt: new Date().toISOString()
+  };
+  
+  tasks.push(task);
+  
+  // Log creation event
+  logEvent(request.user.id, 'task_created', { taskId: task.id, title });
+  
+  reply.code(201);
+  return task;
+});
+
+fastify.post('/v1/tasks/:id/complete', {
+  schema: { tags: ['Tasks'], security: [{ bearerAuth: [] }] },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const taskId = request.params.id;
+  const task = tasks.find(t => t.id === taskId && t.userId === request.user.id);
+  
+  if (!task) {
+    reply.code(404).send({ error: 'Task not found' });
+    return;
+  }
+  
+  if (!task.completed) {
+    task.completed = true;
+    task.completedAt = new Date().toISOString();
+    
+    logEvent(request.user.id, 'task_completed', {
+      taskId,
+      title: task.title,
+      wasOverdue: new Date(task.dueDate) < new Date()
+    });
+    
+    console.log(`✅ Task "${task.title}" completed!`);
+  }
+  
+  return {
+    ok: true,
+    completed: task.completed,
+    completedAt: task.completedAt,
+    idempotent: task.completed
+  };
+});
+
+// ============ TASK ENDPOINTS ============
+fastify.get('/v1/tasks', {
+  schema: { tags: ['Tasks'], security: [{ bearerAuth: [] }] },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const userTasks = tasks.filter(t => t.userId === request.user.id);
+  return userTasks.map(task => ({
+    ...task,
+    status: task.completed ? 'completed' : 'pending',
+    overdue: new Date(task.dueDate) < new Date() && !task.completed
+  }));
+});
+
+fastify.post('/v1/tasks', {
+  schema: {
+    tags: ['Tasks'],
+    summary: 'Create new task',
+    security: [{ bearerAuth: [] }],
+    body: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        dueDate: { type: 'string' },
+        color: { type: 'string' },
+        reminderEnabled: { type: 'boolean' },
+        reminderTime: { type: 'string' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high'] }
+      },
+      required: ['title']
+    },
+    response: { 201: { type: 'object' } }
+  },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const { 
+    title, 
+    description = '',
+    dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Default: tomorrow
+    color = 'amber',
+    reminderEnabled = false,
+    reminderTime = null,
+    priority = 'medium'
+  } = request.body;
+  
+  const task = {
+    id: `task-${Date.now()}`,
+    userId: request.user.id,
+    title,
+    description,
+    dueDate,
+    completed: false,
+    color,
+    reminderEnabled,
+    reminderTime,
+    priority,
+    createdAt: new Date().toISOString()
+  };
+  
+  tasks.push(task);
+  
+  // Log creation event
+  logEvent(request.user.id, 'task_created', { taskId: task.id, title });
+  
+  reply.code(201);
+  return task;
+});
+
+fastify.post('/v1/tasks/:id/complete', {
+  schema: { tags: ['Tasks'], security: [{ bearerAuth: [] }] },
+  preHandler: authenticate
+}, async (request, reply) => {
+  const taskId = request.params.id;
+  const task = tasks.find(t => t.id === taskId && t.userId === request.user.id);
+  
+  if (!task) {
+    reply.code(404).send({ error: 'Task not found' });
+    return;
+  }
+  
+  if (!task.completed) {
+    task.completed = true;
+    task.completedAt = new Date().toISOString();
+    
+    logEvent(request.user.id, 'task_completed', {
+      taskId,
+      title: task.title,
+      wasOverdue: new Date(task.dueDate) < new Date()
+    });
+    
+    console.log(`✅ Task "${task.title}" completed!`);
+  }
+  
+  return {
+    ok: true,
+    completed: task.completed,
+    completedAt: task.completedAt,
+    idempotent: task.completed
   };
 });
 

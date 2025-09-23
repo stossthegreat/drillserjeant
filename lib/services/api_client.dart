@@ -240,6 +240,48 @@ class ApiClient {
     }
   }
 
+  // ============ TASKS ============
+  Future<List<dynamic>> getTasks() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/tasks'),
+      headers: _headers,
+    );
+    
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load tasks: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> createTask(Map<String, dynamic> taskData) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/tasks'),
+      headers: _headers,
+      body: json.encode(taskData),
+    );
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to create task: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> completeTask(String taskId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/tasks/$taskId/complete'),
+      headers: _headers,
+      body: json.encode({}),
+    );
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to complete task: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ============ ALARMS ============
   Future<List<dynamic>> getAlarms() async {
     final response = await http.get(
