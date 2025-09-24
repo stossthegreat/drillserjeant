@@ -1,0 +1,16 @@
+
+  Color _getColorForItem(dynamic item) {
+    final colorName = item["color"] ?? "emerald";
+    return colorOptions.firstWhere(
+      (c) => c["name"] == colorName,
+      orElse: () => colorOptions[0],
+    )["color"];
+  }
+
+  Color _getNeonColorForItem(dynamic item) {
+    final colorName = item["color"] ?? "emerald";
+    return colorOptions.firstWhere(
+      (c) => c["name"] == colorName,
+      orElse: () => colorOptions[0],
+    )["neon"];
+  }

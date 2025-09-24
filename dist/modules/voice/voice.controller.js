@@ -14,49 +14,24 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VoiceController = void 0;
 const common_1 = require("@nestjs/common");
-const swagger_1 = require("@nestjs/swagger");
 const voice_service_1 = require("./voice.service");
-const auth_guard_1 = require("../auth/auth.guard");
 let VoiceController = class VoiceController {
     constructor(voiceService) {
         this.voiceService = voiceService;
     }
-    async getPreset(req, id) {
-        return this.voiceService.getPreset(id);
-    }
-    async textToSpeech(req, body) {
-        const userId = req.user?.id;
-        return this.voiceService.synthesize(userId, body.text, body.voice);
+    async generateTTS(body) {
+        return this.voiceService.generateTTS(body.text, body.voice);
     }
 };
 exports.VoiceController = VoiceController;
 __decorate([
-    (0, common_1.Get)('preset/:id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get preset audio URL' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Signed URL for preset audio' }),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], VoiceController.prototype, "getPreset", null);
-__decorate([
     (0, common_1.Post)('tts'),
-    (0, swagger_1.ApiOperation)({ summary: 'Convert text to speech (PRO only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Generated audio URL' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Upgrade required' }),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], VoiceController.prototype, "textToSpeech", null);
+], VoiceController.prototype, "generateTTS", null);
 exports.VoiceController = VoiceController = __decorate([
-    (0, swagger_1.ApiTags)('Voice'),
     (0, common_1.Controller)('v1/voice'),
     __metadata("design:paramtypes", [voice_service_1.VoiceService])
 ], VoiceController);

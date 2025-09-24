@@ -58,21 +58,6 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     )['neon'];
   }
 
-  Color _getColorForItem(dynamic item) {
-    final colorName = item['color'] ?? 'emerald';
-    return colorOptions.firstWhere(
-      (c) => c['name'] == colorName,
-      orElse: () => colorOptions[0],
-    )['color'];
-  }
-
-  Color _getNeonColorForItem(dynamic item) {
-    final colorName = item['color'] ?? 'emerald';
-    return colorOptions.firstWhere(
-      (c) => c['name'] == colorName,
-      orElse: () => colorOptions[0],
-    )['neon'];
-  }
 
   @override
   void initState() {
@@ -392,123 +377,11 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
       return const SizedBox.shrink();
     }
     
-    final nudge = currentNudge!['nudge'] as Map<String, dynamic>;
-    final message = nudge['message'] ?? '';
-    final mentorName = nudge['mentorName'] ?? 'Mentor';
-    final nudgeType = nudge['type'] ?? 'balanced';
-    final progressPercent = nudge['progressPercent'] ?? 0;
-    
-    // Color based on nudge type
-    Color cardColor;
-    Color accentColor;
-    IconData icon;
-    
-    switch (nudgeType) {
-      case 'low_progress':
-        cardColor = const Color(0xFFDC2626); // Red
-        accentColor = const Color(0xFFEF4444);
-        icon = Icons.warning_rounded;
-        break;
-      case 'high_progress':
-        cardColor = const Color(0xFF10B981); // Green
-        accentColor = const Color(0xFF34D399);
-        icon = Icons.celebration_rounded;
-        break;
-      case 'streak_risk':
-        cardColor = const Color(0xFFF59E0B); // Amber
-        accentColor = const Color(0xFFFBBF24);
-        icon = Icons.local_fire_department_rounded;
-        break;
-      default:
-        cardColor = const Color(0xFF3B82F6); // Blue
-        accentColor = const Color(0xFF60A5FA);
-        icon = Icons.psychology_rounded;
-    }
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            cardColor.withOpacity(0.1),
-            cardColor.withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: accentColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      mentorName,
-                      style: TextStyle(
-                        color: accentColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      'Progress: $progressPercent%',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              height: 1.4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNudgeCard() {
-    if (currentNudge == null || currentNudge!['nudge'] == null) {
-      return const SizedBox.shrink();
-    }
-    
-    final nudge = currentNudge!['nudge'] as Map<String, dynamic>;
-    final message = nudge['message'] ?? '';
-    final mentorName = nudge['mentorName'] ?? 'Mentor';
-    final nudgeType = nudge['type'] ?? 'balanced';
-    final progressPercent = nudge['progressPercent'] ?? 0;
+    // Handle backend response format: { "nudge": "message", "mentor": "drill-sergeant", "type": "encouragement" }
+    final message = currentNudge!['nudge'] as String;
+    final mentorName = currentNudge!['mentor'] ?? 'Drill Sergeant';
+    final nudgeType = currentNudge!['type'] ?? 'encouragement';
+    final progressPercent = 0; // Not provided by simple backend
     
     // Color based on nudge type
     Color cardColor;
@@ -531,10 +404,11 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
         accentColor = const Color(0xFFFBBF24);
         icon = Icons.local_fire_department_rounded;
         break;
+      case 'encouragement':
       default:
-        cardColor = const Color(0xFF3B82F6);
-        accentColor = const Color(0xFF60A5FA);
-        icon = Icons.psychology_rounded;
+        cardColor = const Color(0xFF10B981); // Green for encouragement
+        accentColor = const Color(0xFF34D399);
+        icon = Icons.military_tech_rounded; // Drill sergeant icon
     }
     
     return Container(

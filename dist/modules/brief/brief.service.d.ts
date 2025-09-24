@@ -1,47 +1,91 @@
 import { HabitsService } from '../habits/habits.service';
-import { StreaksService } from '../streaks/streaks.service';
+import { TasksService } from '../tasks/tasks.service';
 export declare class BriefService {
-    private habitsService;
-    private streaksService;
-    constructor(habitsService: HabitsService, streaksService: StreaksService);
+    private readonly habitsService;
+    private readonly tasksService;
+    constructor(habitsService: HabitsService, tasksService: TasksService);
     getTodaysBrief(userId: string): Promise<{
         user: {
             rank: string;
-            xp: any;
-            level: number;
+            xp: number;
+            streakDays: number;
         };
         missions: {
             id: string;
             title: string;
+            progress: number;
+            target: number;
+        }[];
+        achievements: {
+            id: string;
+            name: string;
+        }[];
+        targets: {
+            habitsCompleted: number;
+            tasksCompleted: number;
+            streakDays: number;
+        };
+        habits: {
+            id: string;
+            userId: string;
+            title: string;
             streak: number;
-            status: string;
-            due: string;
-            nextMilestone: number;
-            daysToMilestone: number;
+            schedule: {
+                time: string;
+                days: string[];
+            };
+            lastTick: string;
+            context: {
+                difficulty: number;
+                category: string;
+                lifeDays: number;
+            };
+            color: string;
+            reminderEnabled: boolean;
+            reminderTime: string;
+            createdAt: string;
         }[];
-        riskBanners: {
+        tasks: {
+            id: string;
+            userId: string;
+            title: string;
+            description: string;
+            dueDate: string;
+            completed: boolean;
+            completedAt: any;
+            createdAt: string;
+        }[];
+        today: ({
             type: string;
-            habitId: string;
-            message: string;
-            urgency: string;
-        }[];
-        weeklyTarget: {
-            current: number;
-            goal: number;
-        };
-        achievements: any[];
-        streaksSummary: {
-            overall: number;
-            categories: {
-                id: string;
-                name: string;
-                days: number;
-            }[];
-        };
-        pendingCelebrations: any[];
-        nudges: any[];
+            id: string;
+            userId: string;
+            title: string;
+            streak: number;
+            schedule: {
+                time: string;
+                days: string[];
+            };
+            lastTick: string;
+            context: {
+                difficulty: number;
+                category: string;
+                lifeDays: number;
+            };
+            color: string;
+            reminderEnabled: boolean;
+            reminderTime: string;
+            createdAt: string;
+        } | {
+            type: string;
+            id: string;
+            userId: string;
+            title: string;
+            description: string;
+            dueDate: string;
+            completed: boolean;
+            completedAt: any;
+            createdAt: string;
+        })[];
     }>;
-    private getNextMilestone;
-    private calculateWeeklyProgress;
-    private generateNudges;
+    private isCompletedToday;
 }

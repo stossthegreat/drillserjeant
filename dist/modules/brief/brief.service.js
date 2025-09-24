@@ -12,103 +12,61 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BriefService = void 0;
 const common_1 = require("@nestjs/common");
 const habits_service_1 = require("../habits/habits.service");
-const streaks_service_1 = require("../streaks/streaks.service");
+const tasks_service_1 = require("../tasks/tasks.service");
 let BriefService = class BriefService {
-    constructor(habitsService, streaksService) {
+    constructor(habitsService, tasksService) {
         this.habitsService = habitsService;
-        this.streaksService = streaksService;
+        this.tasksService = tasksService;
     }
     async getTodaysBrief(userId) {
-        const [habits, achievements, streakSummary] = await Promise.all([
-            this.habitsService.list(userId),
-            this.streaksService.getUserAchievements(userId),
-            this.streaksService.getStreakSummary(userId)
-        ]);
-        const now = new Date();
-        const today = now.toDateString();
-        const missions = habits.slice(0, 3).map(habit => {
-            const tickedToday = habit.lastTick && new Date(habit.lastTick).toDateString() === today;
-            const nextMilestone = this.getNextMilestone(habit.streak);
-            return {
-                id: habit.id,
-                title: habit.title,
-                streak: habit.streak,
-                status: tickedToday ? 'completed' : 'pending',
-                due: 'today',
-                nextMilestone,
-                daysToMilestone: nextMilestone ? nextMilestone - habit.streak : null
-            };
-        });
-        const riskBanners = habits
-            .filter(habit => {
-            const daysSinceLastTick = habit.lastTick ?
-                Math.floor((now.getTime() - new Date(habit.lastTick).getTime()) / (1000 * 60 * 60 * 24)) : 999;
-            return daysSinceLastTick > 1 && habit.streak > 7;
-        })
-            .map(habit => ({
-            type: 'streak_save',
-            habitId: habit.id,
-            message: `${habit.title} streak at risk! Don't break the chain.`,
-            urgency: 'high'
-        }));
+        const habits = await this.habitsService.list(userId);
+        const tasks = await this.tasksService.list(userId);
+        const user = {
+            rank: 'Sergeant',
+            xp: 1200,
+            streakDays: 7
+        };
+        const missions = [
+            {
+                id: 'm1',
+                title: 'Complete 3 habits',
+                progress: habits.filter(h => this.isCompletedToday(h)).length,
+                target: Math.min(habits.length, 3)
+            }
+        ];
+        const achievements = [
+            { id: 'a1', name: '7-Day Streak' }
+        ];
+        const targets = {
+            habitsCompleted: habits.filter(h => this.isCompletedToday(h)).length,
+            tasksCompleted: tasks.filter(t => t.completed).length,
+            streakDays: 7
+        };
+        const today = [
+            ...habits.map(h => ({ ...h, type: 'habit' })),
+            ...tasks.map(t => ({ ...t, type: 'task' }))
+        ];
         return {
-            user: {
-                rank: achievements.rank,
-                xp: achievements.totalXP,
-                level: achievements.level
-            },
+            user,
             missions,
-            riskBanners,
-            weeklyTarget: {
-                current: this.calculateWeeklyProgress(habits),
-                goal: 6.0
-            },
-            achievements: achievements.achievements.slice(-3),
-            streaksSummary: streakSummary,
-            pendingCelebrations: achievements.pendingCelebrations,
-            nudges: this.generateNudges(habits, riskBanners.length > 0)
+            achievements,
+            targets,
+            habits,
+            tasks,
+            today
         };
     }
-    getNextMilestone(currentStreak) {
-        const milestones = [7, 14, 30, 60, 90, 180, 365];
-        return milestones.find(m => m > currentStreak) || null;
-    }
-    calculateWeeklyProgress(habits) {
-        const completedToday = habits.filter(h => {
-            const today = new Date().toDateString();
-            return h.lastTick && new Date(h.lastTick).toDateString() === today;
-        }).length;
-        return Math.min(completedToday * 1.5, 6.0);
-    }
-    generateNudges(habits, hasRisks) {
-        const nudges = [];
-        if (hasRisks) {
-            nudges.push({
-                type: 'streak_save',
-                title: 'Save Your Streak',
-                message: 'Don\'t let your progress slip away. Complete your habits now.',
-                priority: 'high'
-            });
-        }
-        const uncompletedHabits = habits.filter(h => {
-            const today = new Date().toDateString();
-            return !h.lastTick || new Date(h.lastTick).toDateString() !== today;
-        });
-        if (uncompletedHabits.length > 0) {
-            nudges.push({
-                type: 'daily_reminder',
-                title: 'Complete Your Mission',
-                message: `${uncompletedHabits.length} habits remaining for today.`,
-                priority: 'medium'
-            });
-        }
-        return nudges;
+    isCompletedToday(habit) {
+        if (!habit.lastTick)
+            return false;
+        const today = new Date().toDateString();
+        return new Date(habit.lastTick).toDateString() === today;
     }
 };
 exports.BriefService = BriefService;
 exports.BriefService = BriefService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [habits_service_1.HabitsService,
-        streaks_service_1.StreaksService])
+        tasks_service_1.TasksService])
 ], BriefService);
 //# sourceMappingURL=brief.service.js.map

@@ -21,7 +21,8 @@
     "fastify": "^4.25.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "openai": "^4.57.0"
+    "openai": "^4.57.0",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.0",

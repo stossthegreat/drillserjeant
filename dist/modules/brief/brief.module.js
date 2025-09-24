@@ -11,15 +11,16 @@ const common_1 = require("@nestjs/common");
 const brief_controller_1 = require("./brief.controller");
 const brief_service_1 = require("./brief.service");
 const habits_module_1 = require("../habits/habits.module");
-const streaks_module_1 = require("../streaks/streaks.module");
+const tasks_module_1 = require("../tasks/tasks.module");
 let BriefModule = class BriefModule {
 };
 exports.BriefModule = BriefModule;
 exports.BriefModule = BriefModule = __decorate([
     (0, common_1.Module)({
-        imports: [habits_module_1.HabitsModule, streaks_module_1.StreaksModule],
+        imports: [habits_module_1.HabitsModule, tasks_module_1.TasksModule],
         controllers: [brief_controller_1.BriefController],
         providers: [brief_service_1.BriefService],
+        exports: [brief_service_1.BriefService],
     })
 ], BriefModule);
 //# sourceMappingURL=brief.module.js.map

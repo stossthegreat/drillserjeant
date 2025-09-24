@@ -8,30 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
-const users_module_1 = require("./modules/users/users.module");
-const habits_module_1 = require("./modules/habits/habits.module");
-const chat_module_1 = require("./modules/chat/chat.module");
 const voice_module_1 = require("./modules/voice/voice.module");
-const alarms_module_1 = require("./modules/alarms/alarms.module");
-const auth_module_1 = require("./modules/auth/auth.module");
-const streaks_module_1 = require("./modules/streaks/streaks.module");
+const tasks_module_1 = require("./modules/tasks/tasks.module");
+const nudges_module_1 = require("./modules/nudges/nudges.module");
+const habits_module_1 = require("./modules/habits/habits.module");
 const brief_module_1 = require("./modules/brief/brief.module");
-const billing_module_1 = require("./modules/billing/billing.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            auth_module_1.AuthModule,
-            users_module_1.UsersModule,
             habits_module_1.HabitsModule,
-            chat_module_1.ChatModule,
-            voice_module_1.VoiceModule,
-            alarms_module_1.AlarmsModule,
-            streaks_module_1.StreaksModule,
+            tasks_module_1.TasksModule,
             brief_module_1.BriefModule,
-            billing_module_1.BillingModule,
+            nudges_module_1.NudgesModule,
+            voice_module_1.VoiceModule,
         ],
         controllers: [],
         providers: [],

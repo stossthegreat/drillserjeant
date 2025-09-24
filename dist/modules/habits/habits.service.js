@@ -15,77 +15,72 @@ let HabitsService = class HabitsService {
                 id: 'habit-1',
                 userId: 'demo-user-123',
                 title: 'Morning Workout',
+                streak: 7,
                 schedule: { time: '07:00', days: ['mon', 'tue', 'wed', 'thu', 'fri'] },
-                streak: 5,
-                lastTick: null,
-                createdAt: '2024-01-01T00:00:00Z',
+                lastTick: new Date().toISOString(),
+                context: { difficulty: 2, category: 'fitness', lifeDays: 0.5 },
+                color: 'emerald',
+                reminderEnabled: true,
+                reminderTime: '07:00',
+                createdAt: '2024-01-01T00:00:00Z'
             },
             {
                 id: 'habit-2',
                 userId: 'demo-user-123',
                 title: 'Read 30 Minutes',
+                streak: 30,
                 schedule: { time: '20:00', days: ['daily'] },
-                streak: 12,
-                lastTick: null,
-                createdAt: '2024-01-01T00:00:00Z',
-            },
+                lastTick: new Date().toISOString(),
+                context: { difficulty: 1, category: 'learning', lifeDays: 0.3 },
+                color: 'sky',
+                reminderEnabled: true,
+                reminderTime: '20:00',
+                createdAt: '2024-01-01T00:00:00Z'
+            }
         ];
     }
     async list(userId) {
-        return this.habits.filter(h => h.userId === userId);
+        return this.habits.filter(habit => habit.userId === userId);
     }
-    async create(userId, data) {
-        const habit = {
+    async create(userId, habitData) {
+        const newHabit = {
             id: `habit-${Date.now()}`,
             userId,
-            ...data,
+            title: habitData.title || habitData.name,
             streak: 0,
+            schedule: habitData.schedule || { type: 'daily' },
             lastTick: null,
+            context: habitData.context || { difficulty: 2 },
+            color: habitData.color || 'emerald',
+            reminderEnabled: habitData.reminderEnabled || false,
+            reminderTime: habitData.reminderTime || '08:00',
             createdAt: new Date().toISOString(),
+            ...habitData
         };
-        this.habits.push(habit);
-        return habit;
+        this.habits.push(newHabit);
+        return newHabit;
     }
-    async update(id, data) {
-        const index = this.habits.findIndex(h => h.id === id);
-        if (index >= 0) {
-            this.habits[index] = { ...this.habits[index], ...data };
-            return this.habits[index];
-        }
-        throw new Error('Habit not found');
-    }
-    async tick(userId, habitId, idempotencyKey) {
-        console.log(`Ticking habit ${habitId} for user ${userId} (key: ${idempotencyKey})`);
-        const habit = this.habits.find(h => h.id === habitId && h.userId === userId);
+    async tick(id, userId) {
+        const habit = this.habits.find(h => h.id === id && h.userId === userId);
         if (!habit) {
             throw new Error('Habit not found');
         }
-        const today = new Date().toISOString().split('T')[0];
-        if (habit.lastTick?.startsWith(today)) {
-            console.log('Habit already ticked today - idempotent response');
-            return { achievements: [] };
+        const today = new Date().toDateString();
+        const lastTickDate = habit.lastTick ? new Date(habit.lastTick).toDateString() : null;
+        if (lastTickDate === today) {
+            return habit;
         }
-        habit.streak += 1;
         habit.lastTick = new Date().toISOString();
-        console.log(`📝 Event created: habit_tick for ${habitId}`);
-        const achievements = this.checkAchievements(userId, habitId, habit.streak);
-        console.log(`Habit ticked! New streak: ${habit.streak}, Achievements: ${achievements.length}`);
-        return { achievements };
+        habit.streak = (habit.streak || 0) + 1;
+        return habit;
     }
-    checkAchievements(userId, habitId, streak) {
-        const milestones = [7, 14, 30, 60, 90, 180, 365];
-        const achievements = [];
-        if (milestones.includes(streak)) {
-            achievements.push({
-                id: `streak_${streak}`,
-                title: `${streak} Day Streak!`,
-                description: `Completed ${streak} days in a row`,
-                unlocked: true,
-                audioPresetId: `praise_${streak}_day`
-            });
-            console.log(`🎉 ACHIEVEMENT: ${streak} day streak unlocked!`);
+    async update(id, userId, updateData) {
+        const habit = this.habits.find(h => h.id === id && h.userId === userId);
+        if (!habit) {
+            throw new Error('Habit not found');
         }
-        return achievements;
+        Object.assign(habit, updateData);
+        return habit;
     }
 };
 exports.HabitsService = HabitsService;

@@ -10,15 +10,14 @@ exports.VoiceModule = void 0;
 const common_1 = require("@nestjs/common");
 const voice_controller_1 = require("./voice.controller");
 const voice_service_1 = require("./voice.service");
-const billing_module_1 = require("../billing/billing.module");
 let VoiceModule = class VoiceModule {
 };
 exports.VoiceModule = VoiceModule;
 exports.VoiceModule = VoiceModule = __decorate([
     (0, common_1.Module)({
-        imports: [billing_module_1.BillingModule],
         controllers: [voice_controller_1.VoiceController],
         providers: [voice_service_1.VoiceService],
+        exports: [voice_service_1.VoiceService],
     })
 ], VoiceModule);
 //# sourceMappingURL=voice.module.js.map
