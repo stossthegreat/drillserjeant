@@ -4,19 +4,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-flutter {
-    source = "../.."
-}
+flutter { source = "../.." }
 
 android {
-    // TODO: set to your real package
-    namespace = "com.yourcompany.drillserjeant"
-
-    // Plugins (e.g., path_provider_android) compile against 36
+    namespace = "com.yourcompany.drillserjeant" // TODO: your real package
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.yourcompany.drillserjeant" // TODO: real app id
+        applicationId = "com.yourcompany.drillserjeant" // TODO: your real id
         minSdk = 23
         targetSdk = 36
         versionCode = 1
@@ -24,9 +19,7 @@ android {
     }
 
     buildTypes {
-        // Force resource shrink OFF globally (only useful when minify is true)
         configureEach { isShrinkResources = false }
-
         named("debug") {
             isMinifyEnabled = false
             isShrinkResources = false
@@ -34,12 +27,10 @@ android {
         named("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // If you use a keystore:
             // signingConfig = signingConfigs.getByName("release")
         }
     }
@@ -47,14 +38,9 @@ android {
     packaging {
         resources {
             excludes += setOf(
-                "META-INF/AL2.0",
-                "META-INF/LGPL2.1",
-                "META-INF/licenses/**",
-                "META-INF/DEPENDENCIES",
-                "META-INF/NOTICE",
-                "META-INF/NOTICE.txt",
-                "META-INF/LICENSE",
-                "META-INF/LICENSE.txt"
+                "META-INF/AL2.0","META-INF/LGPL2.1","META-INF/licenses/**",
+                "META-INF/DEPENDENCIES","META-INF/NOTICE","META-INF/NOTICE.txt",
+                "META-INF/LICENSE","META-INF/LICENSE.txt"
             )
         }
     }
@@ -66,6 +52,4 @@ android {
     kotlinOptions { jvmTarget = "17" }
 }
 
-dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
-}
+dependencies { implementation("org.jetbrains.kotlin:kotlin-stdlib") }
