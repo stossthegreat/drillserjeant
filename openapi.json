@@ -128,6 +128,17 @@
         ]
       }
     },
+    "/v1/brief": {
+      "get": {
+        "operationId": "BriefController_getBrief",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/v1/brief/today": {
       "get": {
         "operationId": "BriefController_getTodaysBrief",
@@ -165,6 +176,68 @@
         "parameters": [],
         "responses": {
           "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/reports/daily": {
+      "get": {
+        "operationId": "ReportsController_getDailyReport",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/reports/weekly": {
+      "get": {
+        "operationId": "ReportsController_getWeeklyReport",
+        "parameters": [
+          {
+            "name": "week",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/reports/morning-brief": {
+      "get": {
+        "operationId": "ReportsController_getMorningBrief",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/reports/evening-summary": {
+      "get": {
+        "operationId": "ReportsController_getEveningSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         }

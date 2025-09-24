@@ -6,7 +6,7 @@ class ApiClient {
   String? _authToken;
 
   ApiClient({String? baseUrl})
-      : baseUrl = baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'https://drillsergeantai-production.up.railway.app');
+      : baseUrl = baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
 
   void setAuthToken(String token) {
     _authToken = token;
