@@ -6,7 +6,11 @@ export declare class NudgesController {
     sendChatMessage(body: any): Promise<{
         reply: any;
         mentor: any;
-        voice: any;
+        voice: {
+            url: any;
+            voiceId: any;
+            source: any;
+        };
         audioPresetId: any;
         timestamp: string;
     }>;

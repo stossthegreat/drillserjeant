@@ -24,14 +24,24 @@ let NudgesController = class NudgesController {
         return this.nudgesService.generateNudge('demo-user-123');
     }
     async sendChatMessage(body) {
-        const { message, mentor = 'drill-sergeant', mode = 'drill-sergeant' } = body;
-        const mentorKey = mentor || mode;
-        const response = await this.nudgesService.generateChatResponse(message, mentorKey);
+        const { message, mentor = '', mode = '', includeVoice = true } = body;
+        const modeToMentor = {
+            'strict': 'drill-sergeant',
+            'light': 'marcus-aurelius',
+            'balanced': 'confucius',
+        };
+        const mentorKey = mentor || modeToMentor[mode] || 'drill-sergeant';
+        const response = await this.nudgesService.generateChatResponse(message, mentorKey, includeVoice);
+        const voicePayload = includeVoice && response.voice ? {
+            url: response.voice.audioUrl || null,
+            voiceId: response.voice.voiceId || null,
+            source: response.voice.source || null,
+        } : null;
         return {
             reply: response.message,
             mentor: response.mentor,
-            voice: response.voice || null,
-            audioPresetId: response.voice || null,
+            voice: voicePayload,
+            audioPresetId: null,
             timestamp: new Date().toISOString()
         };
     }

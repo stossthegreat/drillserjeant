@@ -170,6 +170,20 @@
         ]
       }
     },
+    "/v1/chat": {
+      "post": {
+        "operationId": "NudgesController_sendChatMessage",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Nudges"
+        ]
+      }
+    },
     "/v1/voice/tts": {
       "post": {
         "operationId": "VoiceController_generateTTS",

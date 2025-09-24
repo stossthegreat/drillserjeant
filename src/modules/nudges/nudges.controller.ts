@@ -17,17 +17,31 @@ export class NudgesController {
 
   @Post('chat')
   async sendChatMessage(@Body() body: any) {
-    const { message, mentor = 'drill-sergeant', mode = 'drill-sergeant' } = body;
-    const mentorKey = mentor || mode;
+    const { message, mentor = '', mode = '', includeVoice = true } = body;
+
+    // Prefer explicit mentor; otherwise map mode -> mentor
+    const modeToMentor: Record<string, string> = {
+      'strict': 'drill-sergeant',
+      'light': 'marcus-aurelius',
+      'balanced': 'confucius',
+    };
+    const mentorKey = mentor || modeToMentor[mode] || 'drill-sergeant';
     
-    // Generate mentor response based on personality
-    const response = await this.nudgesService.generateChatResponse(message, mentorKey);
+    // Generate mentor response (and optionally voice)
+    const response = await this.nudgesService.generateChatResponse(message, mentorKey, includeVoice);
+
+    // Map voice to Flutter-expected shape
+    const voicePayload = includeVoice && response.voice ? {
+      url: response.voice.audioUrl || null,
+      voiceId: response.voice.voiceId || null,
+      source: response.voice.source || null,
+    } : null;
     
     return {
       reply: response.message,
       mentor: response.mentor,
-      voice: response.voice || null,
-      audioPresetId: response.voice || null,
+      voice: voicePayload,
+      audioPresetId: null,
       timestamp: new Date().toISOString()
     };
   }

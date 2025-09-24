@@ -1,316 +1,152 @@
-import { Injectable } from '@nestjs/common';
-
-interface SmartNudge {
-  message: string;
-  mentor: string;
-  type: string;
-  intelligence: {
-    timeBasedFactor: number;
-    patternRecognition: string;
-    personalityAdaptation: string;
-  };
-}
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { VoiceService } from '../voice/voice.service';
+import OpenAI from 'openai';
 
 @Injectable()
 export class NudgesService {
+  constructor(
+    @Inject(forwardRef(() => VoiceService))
+    private readonly voiceService: VoiceService,
+  ) {}
+
   private mentorProfiles = {
     'drill-sergeant': {
       name: 'Drill Sergeant',
-      personality: 'strict',
-      voice: 'commanding',
-      strengths: ['motivation', 'discipline', 'urgency'],
-      messages: {
-        morning: [
-          "Rise and shine, soldier! Today's battle begins now!",
-          "The enemy is complacency. Attack it with action!",
-          "Winners don't wait for motivation - they CREATE it!"
-        ],
-        afternoon: [
-          "Half-time report: Are you winning or making excuses?",
-          "The day's not over! Push through that afternoon slump!",
-          "Champions separate themselves in moments like this!"
-        ],
-        evening: [
-          "Day's end assessment: Did you give it everything?",
-          "Tomorrow's victory is built on today's discipline!",
-          "Reflect, regroup, and prepare for tomorrow's assault!"
-        ],
-        weekend: [
-          "Weekends don't mean weakness! Stay sharp!",
-          "While others rest, champions advance!",
-          "Weekend warrior mode: ACTIVATED!"
-        ],
-        streak_risk: [
-          "ALERT: Your streak is in danger! Defend it!",
-          "I see weakness creeping in. ELIMINATE IT!",
-          "Your streak didn't build itself. PROTECT IT!"
-        ],
-        high_performer: [
-          "Outstanding execution! This is what excellence looks like!",
-          "You're setting the standard! Keep that momentum!",
-          "Exceptional work! Now raise the bar even higher!"
-        ]
-      }
+      personality: 'strict, motivational, no-nonsense',
+      role: 'Military Drill Instructor',
+      strengths: ['motivation', 'discipline', 'urgency']
     },
     'marcus-aurelius': {
       name: 'Marcus Aurelius',
-      personality: 'philosophical',
-      voice: 'wise',
-      strengths: ['wisdom', 'reflection', 'stoicism'],
-      messages: {
-        morning: [
-          "Each dawn brings opportunity to practice virtue.",
-          "What we do now echoes in eternity. Choose wisely.",
-          "The universe is change; our life is what our thoughts make it."
-        ],
-        afternoon: [
-          "Remember: what stands in the way becomes the way.",
-          "You have power over your mind - not outside events.",
-          "The impediment to action advances action."
-        ],
-        evening: [
-          "Reflect on the day with gratitude and wisdom.",
-          "Today's actions were seeds for tomorrow's harvest.",
-          "End the day knowing you lived with purpose."
-        ],
-        weekend: [
-          "Rest is not idleness; it is preparation for growth.",
-          "Use this time for reflection and renewal.",
-          "Even in rest, the wise mind continues to learn."
-        ]
-      }
+      personality: 'stoic, wise, philosophical',
+      role: 'Stoic Philosopher Emperor',
+      strengths: ['wisdom', 'resilience', 'perspective']
     },
     'buddha': {
       name: 'Buddha',
-      personality: 'compassionate',
-      voice: 'gentle',
-      strengths: ['mindfulness', 'compassion', 'peace'],
-      messages: {
-        morning: [
-          "Begin this day with mindful intention.",
-          "Each moment is a fresh beginning.",
-          "Approach today with compassion for yourself."
-        ],
-        afternoon: [
-          "Notice this moment. You are exactly where you need to be.",
-          "Progress is not about perfection, but about presence.",
-          "Breathe. Center yourself. Continue with awareness."
-        ],
-        evening: [
-          "Let go of today's struggles with loving kindness.",
-          "Tomorrow will bring new opportunities for growth.",
-          "Rest in the peace of having done your best."
-        ]
-      }
+      personality: 'compassionate, mindful, peaceful',
+      role: 'Enlightened Teacher',
+      strengths: ['mindfulness', 'compassion', 'inner peace']
     },
     'abraham-lincoln': {
       name: 'Abraham Lincoln',
-      personality: 'encouraging',
-      voice: 'steady',
-      strengths: ['perseverance', 'hope', 'determination'],
-      messages: {
-        morning: [
-          "The best way to predict the future is to create it.",
-          "Today is another chance to build something meaningful.",
-          "Great things are accomplished by those who persist."
-        ],
-        afternoon: [
-          "When you reach the end of your rope, tie a knot and hang on.",
-          "The path may be difficult, but the destination is worth it.",
-          "Character is like a tree and reputation like its shadow."
-        ],
-        evening: [
-          "You cannot escape the responsibility of tomorrow by evading it today.",
-          "End this day knowing you faced it with courage.",
-          "Tomorrow holds promise for those who persevere."
-        ]
-      }
+      personality: 'determined, humble, inspiring',
+      role: 'Visionary Leader',
+      strengths: ['perseverance', 'leadership', 'character']
     },
     'confucius': {
       name: 'Confucius',
-      personality: 'wise',
-      voice: 'teaching',
-      strengths: ['learning', 'growth', 'wisdom'],
-      messages: {
-        morning: [
-          "Every day is a chance to learn something new.",
-          "The person who asks a question is a fool for five minutes.",
-          "Begin today with the curiosity of a student."
-        ],
-        afternoon: [
-          "Real knowledge is knowing the extent of one's ignorance.",
-          "The wise find pleasure in water; the virtuous find pleasure in hills.",
-          "Study the past if you would define the future."
-        ],
-        evening: [
-          "By three methods we may learn wisdom: reflection, imitation, and experience.",
-          "What did today teach you about yourself?",
-          "The superior man thinks of virtue; the small man thinks of comfort."
-        ]
+      personality: 'wise, patient, educational',
+      role: 'Ancient Philosopher',
+      strengths: ['wisdom', 'learning', 'virtue']
+    }
+  } as const;
+
+  async generateNudge(userId: string): Promise<any> {
+    const mentors = Object.keys(this.mentorProfiles);
+    const randomMentor = mentors[Math.floor(Math.random() * mentors.length)];
+
+    const motivationalMessages = [
+      "Every small step builds the foundation of greatness.",
+      "Your consistency today determines your success tomorrow.",
+      "Champions are made in the moments when nobody is watching.",
+      "The difference between ordinary and extraordinary is that little extra.",
+      "Success is not final, failure is not fatal - it's the courage to continue that counts."
+    ];
+
+    const message = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+
+    return {
+      nudge: message,
+      mentor: randomMentor,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  async generateChatResponse(message: string, mentorKey: string, includeVoice: boolean = true): Promise<any> {
+    const mentor = this.mentorProfiles[mentorKey as keyof typeof this.mentorProfiles] || this.mentorProfiles['drill-sergeant'];
+
+    // Try OpenAI first for real AI responses
+    let responseText: string | null = null;
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey && message && message.trim().length > 0) {
+      try {
+        const openai = new OpenAI({ apiKey });
+        const systemPrompt = `You are ${mentor.name} (${mentor.role}). Speak in character. Personality: ${mentor.personality}. Respond in 2-3 sentences, direct and motivational, practical, no fluff.`;
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ],
+          temperature: 0.8,
+          max_tokens: 220,
+        });
+        responseText = completion.choices?.[0]?.message?.content?.trim() || null;
+      } catch (err) {
+        console.log('OpenAI error, falling back to static personas:', err);
       }
     }
-  };
 
-  async generateNudge(userId: string, habits: any[] = [], tasks: any[] = []): Promise<any> {
-    // Simple intelligence based on time and basic patterns
-    const intelligence = this.analyzeContext(habits, tasks);
-    const smartNudge = this.generateSmartNudge(intelligence);
-
-    return {
-      nudge: smartNudge.message,
-      mentor: smartNudge.mentor,
-      type: smartNudge.type,
-      timestamp: new Date().toISOString(),
-      intelligence: smartNudge.intelligence,
-      source: 'smart_nudge_v1'
-    };
-  }
-
-  private analyzeContext(habits: any[], tasks: any[]): any {
-    const now = new Date();
-    const hour = now.getHours();
-    const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-    
-    // Simple pattern recognition
-    const todayCompletions = habits.filter(h => {
-      if (!h.lastTick) return false;
-      const tickDate = new Date(h.lastTick).toDateString();
-      return tickDate === now.toDateString();
-    }).length;
-
-    const totalHabits = habits.length;
-    const progressPercent = totalHabits > 0 ? (todayCompletions / totalHabits) * 100 : 0;
-    
-    // Streak analysis
-    const streaksAtRisk = habits.filter(h => {
-      if (!h.lastTick) return true;
-      const daysSinceLastTick = (Date.now() - new Date(h.lastTick).getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceLastTick > 1;
-    }).length;
-
-    return {
-      timeOfDay: hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening',
-      isWeekend,
-      progressPercent,
-      streaksAtRisk,
-      totalHabits,
-      todayCompletions,
-      userType: this.classifyUser(progressPercent, streaksAtRisk)
-    };
-  }
-
-  private classifyUser(progressPercent: number, streaksAtRisk: number): string {
-    if (progressPercent > 80 && streaksAtRisk === 0) return 'high_performer';
-    if (streaksAtRisk > 2) return 'streak_risk';
-    if (progressPercent < 30) return 'needs_motivation';
-    return 'steady_progress';
-  }
-
-  private generateSmartNudge(context: any): SmartNudge {
-    let selectedMentor = 'drill-sergeant';
-    let messageCategory = context.timeOfDay;
-    
-    // Intelligent mentor selection based on context
-    if (context.userType === 'high_performer') {
-      selectedMentor = Math.random() > 0.5 ? 'marcus-aurelius' : 'abraham-lincoln';
-      messageCategory = 'high_performer';
-    } else if (context.userType === 'streak_risk') {
-      selectedMentor = 'drill-sergeant';
-      messageCategory = 'streak_risk';
-    } else if (context.userType === 'needs_motivation') {
-      selectedMentor = Math.random() > 0.5 ? 'drill-sergeant' : 'abraham-lincoln';
-    } else if (context.isWeekend) {
-      messageCategory = 'weekend';
-    }
-
-    // Get mentor and messages
-    const mentor = this.mentorProfiles[selectedMentor];
-    const messages = mentor.messages[messageCategory] || mentor.messages.morning;
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-
-    // Add contextual intelligence
-    let enhancedMessage = randomMessage;
-    
-    if (context.todayCompletions > 0) {
-      enhancedMessage += ` You've already completed ${context.todayCompletions} habit${context.todayCompletions === 1 ? '' : 's'} today!`;
-    }
-    
-    if (context.streaksAtRisk > 0 && messageCategory !== 'streak_risk') {
-      enhancedMessage += ` Watch out - ${context.streaksAtRisk} streak${context.streaksAtRisk === 1 ? ' is' : 's are'} at risk.`;
-    }
-
-    return {
-      message: enhancedMessage,
-      mentor: selectedMentor,
-      type: context.userType,
-      intelligence: {
-        timeBasedFactor: this.calculateTimeFactor(context.timeOfDay),
-        patternRecognition: `Progress: ${Math.round(context.progressPercent)}%, Risk: ${context.streaksAtRisk} habits`,
-        personalityAdaptation: `Selected ${mentor.name} for ${context.userType} user type`
+    // Fallback to crafted persona replies
+    if (!responseText) {
+      const lower = message.toLowerCase();
+      switch (mentorKey) {
+        case 'drill-sergeant':
+          responseText = `Listen up, soldier! ${lower.includes('tired') || lower.includes('weak') ? 
+            'Tired is just a state of mind. Champions push when others quit. Drop and give me 20, then get back on mission!' :
+            lower.includes('motivation') || lower.includes('help') ?
+            'Motivation fades. Discipline wins. Show up, execute, and stack small wins. That is how warriors are built.' :
+            'No excuses, no shortcuts, no surrender. You came here to improve — prove it with action today.'}`;
+          break;
+        case 'marcus-aurelius':
+          responseText = `My friend, ${lower.includes('difficult') || lower.includes('hard') ?
+            'the impediment to action advances action. What stands in the way becomes the way. Use this moment to practice virtue.' :
+            lower.includes('control') || lower.includes('worry') ?
+            'attend only to what is within your control — your judgments and actions. Let the rest pass by like the wind.' :
+            'you have power over your mind, not outside events. Choose reason over impulse and proceed with calm resolve.'}`;
+          break;
+        case 'buddha':
+          responseText = `Dear friend, ${lower.includes('suffering') || lower.includes('pain') ?
+            'pain is inevitable, but suffering is optional. Accept the present moment gently and let go of clinging.' :
+            lower.includes('anxious') || lower.includes('worried') ?
+            'breathe and return to now. Peace lives in the present; the future is only thought. Let the mind settle like a still pond.' :
+            'the mind is everything. What you think, you become. Practice kindness toward yourself and begin again.'}`;
+          break;
+        case 'abraham-lincoln':
+          responseText = `My friend, ${lower.includes('failure') || lower.includes('failed') ?
+            'failure is not falling down; it is staying down. Determine that the thing can and shall be done, and then find the way.' :
+            lower.includes('give up') || lower.includes('quit') ?
+            'I am a slow walker, but I never walk back. Persevere today; your character is forged in such moments.' :
+            'the best way to predict your future is to create it. Act with integrity and purpose, and you will not walk alone.'}`;
+          break;
+        case 'confucius':
+          responseText = `Wise one, ${lower.includes('slow') || lower.includes('progress') ?
+            'it does not matter how slowly you go so long as you do not stop. Carry away small stones and the mountain will move.' :
+            lower.includes('mistake') || lower.includes('wrong') ?
+            'our greatest glory is not in never falling, but in rising every time we fall. Learn, correct, continue.' :
+            'by reflection, imitation, and experience we gain wisdom. Reflect now and choose the right next step.'}`;
+          break;
+        default:
+          responseText = 'Stay strong and keep pushing forward. Every challenge is an opportunity to grow.';
       }
-    };
-  }
-
-  private calculateTimeFactor(timeOfDay: string): number {
-    // Time-based motivation factors
-    switch (timeOfDay) {
-      case 'morning': return 0.9; // High energy time
-      case 'afternoon': return 0.6; // Energy dip time
-      case 'evening': return 0.7; // Reflection time
-      default: return 0.5;
     }
-  }
 
-  async generateChatResponse(message: string, mentorKey: string): Promise<any> {
-    const mentor = this.mentorProfiles[mentorKey] || this.mentorProfiles['drill-sergeant'];
-    
-    // Simple response generation based on mentor personality
-    const responses = {
-      'drill-sergeant': [
-        "Listen up! That attitude will get you nowhere. Push harder!",
-        "Drop and give me 20! Then we'll talk about your problems.",
-        "No excuses! Winners find a way, losers find excuses.",
-        "You think this is hard? Wait until life hits you. Stay disciplined!",
-        "Outstanding question! Now show me outstanding action!"
-      ],
-      'marcus-aurelius': [
-        "Remember, what we do now echoes in eternity. Choose wisely.",
-        "The impediment to action advances action. What stands in the way becomes the way.",
-        "You have power over your mind - not outside events. Realize this, and you will find strength.",
-        "Very little is needed to make a happy life; it is all within yourself, in your way of thinking.",
-        "The best revenge is not to be like your enemy."
-      ],
-      'buddha': [
-        "Peace comes from within. Do not seek it without.",
-        "The mind is everything. What you think you become.",
-        "Three things cannot be long hidden: the sun, the moon, and the truth.",
-        "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.",
-        "Hatred does not cease by hatred, but only by love; this is the eternal rule."
-      ],
-      'abraham-lincoln': [
-        "Most folks are as happy as they make up their minds to be.",
-        "The best way to predict your future is to create it.",
-        "Whatever you are, be a good one.",
-        "I am a slow walker, but I never walk back.",
-        "Give me six hours to chop down a tree and I will spend the first four sharpening the axe."
-      ],
-      'confucius': [
-        "It does not matter how slowly you go as long as you do not stop.",
-        "The man who moves a mountain begins by carrying away small stones.",
-        "Our greatest glory is not in never falling, but in rising every time we fall.",
-        "Real knowledge is to know the extent of one's ignorance.",
-        "By three methods we may learn wisdom: First, by reflection, which is noblest; Second, by imitation, which is easiest; and third by experience, which is the bitterest."
-      ]
-    };
-
-    const mentorResponses = responses[mentorKey] || responses['drill-sergeant'];
-    const randomResponse = mentorResponses[Math.floor(Math.random() * mentorResponses.length)];
+    // Optionally synthesize voice
+    let voiceData: any = null;
+    if (includeVoice) {
+      try {
+        voiceData = await this.voiceService.generateTTS(responseText, mentorKey);
+      } catch (error) {
+        console.log('Voice generation failed:', error);
+      }
+    }
 
     return {
-      message: randomResponse,
+      message: responseText,
       mentor: mentorKey,
       type: 'chat_response',
-      voice: null // Will be generated separately if needed
+      voice: voiceData,
     };
   }
 } 
