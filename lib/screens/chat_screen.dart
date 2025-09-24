@@ -55,6 +55,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final response = await apiClient.sendChatMessage(
         text.trim(),
         mode: _mentorToMode(selectedMentor.id),
+        includeVoice: true,
       );
       
       final replyText = (response['reply'] ?? 'Acknowledged. Keep pushing.').toString();
@@ -66,17 +67,12 @@ class _ChatScreenState extends State<ChatScreen> {
         throw Exception('Empty reply text received from API');
       }
       
-      print('🎯 Chat response received: ${response.keys}');
-      print('🎯 Reply text: ${replyText.length > 50 ? replyText.substring(0, 50) + '...' : replyText}');
-      print('🎯 Voice data: $voiceData');
-      print('🎯 Audio preset ID: $audioPresetId');
-      
       setState(() {
         chat.add({
           'role': 'sgt', 
           'text': replyText,
-          'voice': voiceData?.toString() ?? '', // Convert to string with null fallback
-          'audioPresetId': audioPresetId?.toString() ?? '', // Ensure string type with null fallback
+          'voice': voiceData?.toString() ?? '',
+          'audioPresetId': audioPresetId?.toString() ?? '',
         });
         isLoading = false;
       });
@@ -89,22 +85,10 @@ class _ChatScreenState extends State<ChatScreen> {
           await tts.playPreset(audioPresetId.toString());
         }
       } catch (e) {
-        print('Auto-play voice error: $e');
+        // ignore
       }
       
     } catch (e) {
-      // Enhanced error debugging
-      print('❌ Chat error details: $e');
-      print('❌ Error type: ${e.runtimeType}');
-      print('❌ API base URL: ${apiClient.getBaseUrl()}');
-      
-      // Surface error for debugging
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Chat error: $e'),
-          duration: Duration(seconds: 5),
-        ),
-      );
       final reply = _craftReply(text.trim());
       setState(() {
         chat.add({'role': 'sgt', 'text': reply});
@@ -113,16 +97,14 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-
-
   String _mentorToMode(String mentorId) {
     switch (mentorId) {
       case 'drill_sergeant':
         return 'strict';
       case 'marcus_aurelius':
         return 'light';
-      case 'miyamoto_musashi':
-        return 'strict';
+      case 'buddha':
+        return 'balanced';
       case 'confucius':
         return 'balanced';
       case 'abraham_lincoln':
@@ -147,12 +129,12 @@ class _ChatScreenState extends State<ChatScreen> {
         if (lower.contains('difficult') || lower.contains('hard')) return 'The cucumber becomes bitter when it is overripe, and the corn is damaged by the worm. Such things happen, but they are no different from any other loss. Remember: everything we hear is an opinion, not a fact. Everything we see is perspective, not truth.';
         if (lower.contains('stress') || lower.contains('anxiety')) return 'How much trouble he avoids who does not look to see what his neighbor says or does. The best revenge is not to be like your enemy. Confine yourself to the present.';
         return 'You are acting in accordance with reason. Very well. Remember that acceptance of what has happened is the first step to overcoming the consequences of any misfortune. Continue with purpose.';
-      case 'miyamoto_musashi':
-        if (lower.contains('procrast')) return 'In strategy, you must know when to strike and when to wait. But delay from fear is death. Today, this moment, is your battlefield. Draw your sword of determination and cut down hesitation. The Way is in training - begin now.';
-        if (lower.contains('plan')) return 'Study strategy over the years and achieve the spirit of the warrior. Today you will defeat the enemy in yourself. Know your terrain, know your weapons, know your mind. Then act with the precision of a master swordsman.';
-        if (lower.contains('fear') || lower.contains('scared')) return 'Fear is not evil. It tells you what weakness is. And once you know your weakness, you can become stronger as well as kinder. Do not let the body influence the mind. Do not let the mind influence the body.';
-        if (lower.contains('focus') || lower.contains('concentration')) return 'The ultimate aim of martial arts is not having to use them. Fix your determination, and the way will show itself. From one thing, know ten thousand things. When you have attained the Way, you will understand all things.';
-        return 'Good. The Way is found in death and in life. When you have attained the Way of strategy there will not be one thing you cannot understand. Continue your training with single-minded purpose.';
+      case 'buddha':
+        if (lower.contains('procrast')) return 'Delay and haste are both the mind avoiding the present. Breathe. Take one small step now, and then the next.';
+        if (lower.contains('plan')) return 'Make your plan gently, then release clinging to outcomes. Walk the path with awareness; each step is the destination.';
+        if (lower.contains('fear') || lower.contains('anxious')) return 'Anxiety is the mind racing into the future. Return to the breath. Let go, and begin again';
+        if (lower.contains('focus') || lower.contains('concentration')) return 'What you practice, you become. Practice returning to this moment. Focus grows where attention rests.';
+        return 'The mind is everything. What you think, you become. Be kind to yourself and continue.';
       case 'confucius':
         if (lower.contains('procrast')) return 'Is it not a pleasure, having learned something, to put it into practice? The superior man understands what is right; the inferior man understands what will sell. Do not worry about others not appreciating your work. Worry about your work not being worthy of appreciation.';
         if (lower.contains('plan')) return 'Real knowledge is to know the extent of one\'s ignorance. He who exercises government by means of his virtue may be compared to the north polar star, which keeps its place while all the stars turn around it. Begin with yourself, and others will follow.';
@@ -187,7 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
             await tts.playPreset(audioPresetId.toString());
             voicePlayed = true;
           } catch (e) {
-            print('Preset playback error: $e');
+            // ignore
           }
         }
         
@@ -218,142 +200,66 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                   colors: [
-                    selectedMentor.primaryColor.withOpacity(0.1),
-                    selectedMentor.accentColor.withOpacity(0.1),
+                    selectedMentor.primaryColor.withOpacity(0.3),
+                    selectedMentor.accentColor.withOpacity(0.3),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: selectedMentor.primaryColor.withOpacity(0.3),
-                  width: 1,
-                ),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: MentorSelector(
-                selectedMentor: selectedMentor,
-                onMentorChanged: _onMentorChanged,
+                mentors: LegendaryMentors.all,
+                selected: selectedMentor,
+                onChanged: _onMentorChanged,
               ),
             ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: isLoading ? null : _speakLastReply,
-              icon: const Icon(Icons.volume_up, size: 16),
-              label: const Text('Speak', style: TextStyle(fontSize: 12)),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                visualDensity: VisualDensity.compact,
-                minimumSize: const Size(0, 32),
-              ),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 12),
+            
+            // Chat List
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.4),
-                  border: Border.all(color: Colors.white.withOpacity(0.12)),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.all(10),
-                child: ListView.builder(
-                  itemCount: chat.length + (isLoading ? 1 : 0),
-                  itemBuilder: (context, i) {
-                    if (isLoading && i == chat.length) {
-                      return Align(
-                        alignment: Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.06),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.12)),
-                          ),
-                          child: const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                      );
-                    }
-                    
-                    final m = chat[i];
-                    final isUser = m['role'] == 'user';
-                    final isSgt = m['role'] == 'sgt';
-                    return Align(
-                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isUser
-                              ? Colors.amber
-                              : isSgt
-                                  ? Colors.white.withOpacity(0.06)
-                                  : Colors.white.withOpacity(0.06),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.12)),
-                        ),
-                        child: Text(
-                          m['text'] ?? '',
-                          style: TextStyle(color: isUser ? Colors.black : Colors.white),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              child: ListView.builder(
+                itemCount: chat.length,
+                itemBuilder: (context, index) {
+                  final msg = chat[index];
+                  final isUser = msg['role'] == 'user';
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isUser ? Colors.white10 : Colors.white.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      msg['text'] ?? '',
+                      style: TextStyle(color: isUser ? Colors.white : Colors.white70),
+                    ),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 6),
-            SizedBox(
-              height: 36,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-              children: quicks
-                      .map((q) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: OutlinedButton(
-                        onPressed: isLoading ? null : () => _send(q),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                minimumSize: const Size(0, 30),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              child: Text(q, style: const TextStyle(fontSize: 11)),
-                            ),
-                      ))
-                  .toList(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
+
+            // Input row
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: controller,
-                    enabled: !isLoading,
-                    decoration: const InputDecoration(hintText: 'Type your report...'),
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                    ),
                     onSubmitted: _send,
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: isLoading ? null : () => _send(controller.text),
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  child: isLoading 
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Send'),
+                IconButton(
+                  icon: const Icon(Icons.volume_up),
+                  onPressed: _speakLastReply,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: () => _send(controller.text),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

@@ -485,6 +485,20 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
                   ],
                 ),
               ),
+              if (currentNudge != null && currentNudge!['voice'] != null &&
+                  currentNudge!['voice']['url'] != null &&
+                  (currentNudge!['voice']['url'] as String).isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.volume_up, color: Colors.white70),
+                  onPressed: () async {
+                    try {
+                      final url = currentNudge!['voice']['url'].toString();
+                      await tts.playFromUrl(url);
+                    } catch (e) {
+                      // ignore
+                    }
+                  },
+                ),
             ],
           ),
           const SizedBox(height: 16),

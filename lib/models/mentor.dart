@@ -63,21 +63,21 @@ class LegendaryMentors {
     ],
   );
 
-  static const miyamotoMusashi = Mentor(
-    id: 'miyamoto_musashi',
-    name: 'Miyamoto Musashi',
-    title: 'The Way of the Sword',
-    description: 'Strategic thinking, mastery through practice, warrior focus',
-    primaryColor: Color(0xFF742A2A), // Deep Red
-    accentColor: Color(0xFF1A202C), // Warrior Black
-    avatarAsset: 'assets/avatars/miyamoto_musashi.png',
-    signature: 'The way is in training.',
-    philosophy: 'Today I will win over myself of yesterday.',
+  static const buddha = Mentor(
+    id: 'buddha',
+    name: 'Buddha',
+    title: 'The Enlightened One',
+    description: 'Compassion, mindfulness, inner peace',
+    primaryColor: Color(0xFF2563EB), // Calm Blue
+    accentColor: Color(0xFFF59E0B), // Warm Gold
+    avatarAsset: 'assets/avatars/buddha.png',
+    signature: 'Peace begins within.',
+    philosophy: 'The mind is everything. What you think, you become.',
     quickResponses: [
-      "Cut through hesitation.",
-      "Practice makes perfect.",
-      "Strategy over strength.",
-      "One strike, one kill."
+      "Breathe. Return to now.",
+      "Let go and begin again.",
+      "Kindness is strength.",
+      "Choose presence over worry."
     ],
   );
 
@@ -120,7 +120,7 @@ class LegendaryMentors {
   static List<Mentor> get all => [
     drillSergeant,
     marcusAurelius,
-    miyamotoMusashi,
+    buddha,
     confucius,
     abrahamLincoln,
   ];

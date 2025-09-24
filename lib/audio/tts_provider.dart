@@ -10,7 +10,23 @@ class TtsProvider {
     try {
       print('Playing audio from URL: $url'); // Debug log
       await _player.stop();
-      await _player.play(UrlSource(url));
+      if (url.startsWith('data:audio')) {
+        try {
+          await _player.play(UrlSource(url));
+        } catch (e) {
+          print('Data URL playback failed: $e');
+          try {
+            final base64Data = url.split(',').last;
+            final bytes = base64Decode(base64Data);
+            await _player.play(BytesSource(bytes));
+          } catch (e2) {
+            print('Base64 decode error: $e2');
+            throw e; // Re-throw original
+          }
+        }
+      } else {
+        await _player.play(UrlSource(url));
+      }
     } catch (e) {
       print('Play URL error: $e');
     }
