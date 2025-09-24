@@ -1,13 +1,8 @@
 export declare class NudgesService {
-    private mentors;
-    generateNudge(userId: string): Promise<{
-        nudge: {
-            type: string;
-            message: string;
-            mentorId: string;
-            mentorName: string;
-            progressPercent: number;
-            timestamp: string;
-        };
-    }>;
+    private mentorProfiles;
+    generateNudge(userId: string, habits?: any[], tasks?: any[]): Promise<any>;
+    private analyzeContext;
+    private classifyUser;
+    private generateSmartNudge;
+    private calculateTimeFactor;
 }

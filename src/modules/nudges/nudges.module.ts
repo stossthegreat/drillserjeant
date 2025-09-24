@@ -5,6 +5,6 @@ import { NudgesService } from './nudges.service';
 @Module({
   controllers: [NudgesController],
   providers: [NudgesService],
-  exports: [NudgesService]
+  exports: [NudgesService],
 })
 export class NudgesModule {} 

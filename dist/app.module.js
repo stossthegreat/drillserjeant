@@ -13,6 +13,7 @@ const tasks_module_1 = require("./modules/tasks/tasks.module");
 const nudges_module_1 = require("./modules/nudges/nudges.module");
 const habits_module_1 = require("./modules/habits/habits.module");
 const brief_module_1 = require("./modules/brief/brief.module");
+const reports_module_1 = require("./modules/reports/reports.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,6 +25,7 @@ exports.AppModule = AppModule = __decorate([
             brief_module_1.BriefModule,
             nudges_module_1.NudgesModule,
             voice_module_1.VoiceModule,
+            reports_module_1.ReportsModule,
         ],
         controllers: [],
         providers: [],

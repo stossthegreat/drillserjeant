@@ -6,18 +6,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NudgesModule = void 0;
+exports.ReportsModule = void 0;
 const common_1 = require("@nestjs/common");
-const nudges_controller_1 = require("./nudges.controller");
-const nudges_service_1 = require("./nudges.service");
-let NudgesModule = class NudgesModule {
+const reports_controller_1 = require("./reports.controller");
+const reports_service_1 = require("./reports.service");
+const habits_module_1 = require("../habits/habits.module");
+const tasks_module_1 = require("../tasks/tasks.module");
+let ReportsModule = class ReportsModule {
 };
-exports.NudgesModule = NudgesModule;
-exports.NudgesModule = NudgesModule = __decorate([
+exports.ReportsModule = ReportsModule;
+exports.ReportsModule = ReportsModule = __decorate([
     (0, common_1.Module)({
-        controllers: [nudges_controller_1.NudgesController],
-        providers: [nudges_service_1.NudgesService],
-        exports: [nudges_service_1.NudgesService],
+        imports: [habits_module_1.HabitsModule, tasks_module_1.TasksModule],
+        controllers: [reports_controller_1.ReportsController],
+        providers: [reports_service_1.ReportsService],
+        exports: [reports_service_1.ReportsService],
     })
-], NudgesModule);
-//# sourceMappingURL=nudges.module.js.map
+], ReportsModule);
+//# sourceMappingURL=reports.module.js.map

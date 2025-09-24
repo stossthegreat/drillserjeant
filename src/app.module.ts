@@ -4,6 +4,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { NudgesModule } from './modules/nudges/nudges.module';
 import { HabitsModule } from './modules/habits/habits.module';
 import { BriefModule } from './modules/brief/brief.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { BriefModule } from './modules/brief/brief.module';
     BriefModule,
     NudgesModule,
     VoiceModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
