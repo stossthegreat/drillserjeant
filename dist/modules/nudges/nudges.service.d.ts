@@ -5,4 +5,5 @@ export declare class NudgesService {
     private classifyUser;
     private generateSmartNudge;
     private calculateTimeFactor;
+    generateChatResponse(message: string, mentorKey: string): Promise<any>;
 }

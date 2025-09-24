@@ -2,5 +2,11 @@ import { NudgesService } from './nudges.service';
 export declare class NudgesController {
     private readonly nudgesService;
     constructor(nudgesService: NudgesService);
-    getNudge(req: any): Promise<any>;
+    getNudge(): Promise<any>;
+    sendChatMessage(body: any): Promise<{
+        reply: any;
+        mentor: any;
+        voice: any;
+        timestamp: string;
+    }>;
 }

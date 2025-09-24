@@ -243,6 +243,54 @@ let NudgesService = class NudgesService {
             default: return 0.5;
         }
     }
+    async generateChatResponse(message, mentorKey) {
+        const mentor = this.mentorProfiles[mentorKey] || this.mentorProfiles['drill-sergeant'];
+        const responses = {
+            'drill-sergeant': [
+                "Listen up! That attitude will get you nowhere. Push harder!",
+                "Drop and give me 20! Then we'll talk about your problems.",
+                "No excuses! Winners find a way, losers find excuses.",
+                "You think this is hard? Wait until life hits you. Stay disciplined!",
+                "Outstanding question! Now show me outstanding action!"
+            ],
+            'marcus-aurelius': [
+                "Remember, what we do now echoes in eternity. Choose wisely.",
+                "The impediment to action advances action. What stands in the way becomes the way.",
+                "You have power over your mind - not outside events. Realize this, and you will find strength.",
+                "Very little is needed to make a happy life; it is all within yourself, in your way of thinking.",
+                "The best revenge is not to be like your enemy."
+            ],
+            'buddha': [
+                "Peace comes from within. Do not seek it without.",
+                "The mind is everything. What you think you become.",
+                "Three things cannot be long hidden: the sun, the moon, and the truth.",
+                "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment.",
+                "Hatred does not cease by hatred, but only by love; this is the eternal rule."
+            ],
+            'abraham-lincoln': [
+                "Most folks are as happy as they make up their minds to be.",
+                "The best way to predict your future is to create it.",
+                "Whatever you are, be a good one.",
+                "I am a slow walker, but I never walk back.",
+                "Give me six hours to chop down a tree and I will spend the first four sharpening the axe."
+            ],
+            'confucius': [
+                "It does not matter how slowly you go as long as you do not stop.",
+                "The man who moves a mountain begins by carrying away small stones.",
+                "Our greatest glory is not in never falling, but in rising every time we fall.",
+                "Real knowledge is to know the extent of one's ignorance.",
+                "By three methods we may learn wisdom: First, by reflection, which is noblest; Second, by imitation, which is easiest; and third by experience, which is the bitterest."
+            ]
+        };
+        const mentorResponses = responses[mentorKey] || responses['drill-sergeant'];
+        const randomResponse = mentorResponses[Math.floor(Math.random() * mentorResponses.length)];
+        return {
+            message: randomResponse,
+            mentor: mentorKey,
+            type: 'chat_response',
+            voice: null
+        };
+    }
 };
 exports.NudgesService = NudgesService;
 exports.NudgesService = NudgesService = __decorate([

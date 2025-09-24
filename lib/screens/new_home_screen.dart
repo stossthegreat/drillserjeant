@@ -842,7 +842,12 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
 
   Future<void> _toggleTodayItemCompletion(Map<String, dynamic> item) async {
     try {
-      await apiClient.tickHabit(item['id'].toString());
+      final itemType = item['type'] ?? 'habit';
+      if (itemType == 'task') {
+        await apiClient.completeTask(item['id'].toString());
+      } else {
+        await apiClient.tickHabit(item['id'].toString());
+      }
       HapticFeedback.selectionClick();
       _loadData(); // Refresh to get updated state
     } catch (e) {

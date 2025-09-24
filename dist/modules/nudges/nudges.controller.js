@@ -20,8 +20,18 @@ let NudgesController = class NudgesController {
     constructor(nudgesService) {
         this.nudgesService = nudgesService;
     }
-    async getNudge(req) {
+    async getNudge() {
         return this.nudgesService.generateNudge('demo-user-123');
+    }
+    async sendChatMessage(body) {
+        const { message, mentor = 'drill-sergeant' } = body;
+        const response = await this.nudgesService.generateChatResponse(message, mentor);
+        return {
+            reply: response.message,
+            mentor: response.mentor,
+            voice: response.voice || null,
+            timestamp: new Date().toISOString()
+        };
     }
 };
 exports.NudgesController = NudgesController;
@@ -30,11 +40,17 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get AI nudge based on user progress' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Nudge retrieved' }),
     (0, swagger_1.ApiBearerAuth)(),
-    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], NudgesController.prototype, "getNudge", null);
+__decorate([
+    (0, common_1.Post)('chat'),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], NudgesController.prototype, "getNudge", null);
+], NudgesController.prototype, "sendChatMessage", null);
 exports.NudgesController = NudgesController = __decorate([
     (0, swagger_1.ApiTags)('Nudges'),
     (0, common_1.Controller)('v1'),
