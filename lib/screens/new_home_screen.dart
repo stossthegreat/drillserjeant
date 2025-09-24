@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/api_client.dart';
 import '../design/feedback.dart';
+import '../audio/tts_provider.dart';
 
 class NewHomeScreen extends StatefulWidget {
   final String? refreshTrigger;
@@ -13,6 +14,7 @@ class NewHomeScreen extends StatefulWidget {
 }
 
 class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateMixin {
+  final tts = TtsProvider();
   // Core data
   Map<String, dynamic> briefData = {};
   List<dynamic> todayItems = [];

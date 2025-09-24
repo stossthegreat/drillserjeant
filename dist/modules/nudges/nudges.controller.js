@@ -21,7 +21,19 @@ let NudgesController = class NudgesController {
         this.nudgesService = nudgesService;
     }
     async getNudge() {
-        return this.nudgesService.generateNudge('demo-user-123');
+        const res = await this.nudgesService.generateNudge('demo-user-123');
+        const voicePayload = res.voice ? {
+            url: res.voice.audioUrl || null,
+            voiceId: res.voice.voiceId || null,
+            source: res.voice.source || null,
+        } : null;
+        return {
+            nudge: res.nudge,
+            mentor: res.mentor,
+            type: res.type || 'encouragement',
+            voice: voicePayload,
+            timestamp: res.timestamp,
+        };
     }
     async sendChatMessage(body) {
         const { message, mentor = '', mode = '', includeVoice = true } = body;

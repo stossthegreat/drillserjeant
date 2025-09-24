@@ -56,9 +56,19 @@ export class NudgesService {
 
     const message = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
+    // Generate voice for the nudge (always attempt; service will mock/fallback if no key)
+    let voiceData: any = null;
+    try {
+      voiceData = await this.voiceService.generateTTS(message, randomMentor);
+    } catch (e) {
+      console.log('Nudge TTS generation failed:', e);
+    }
+
     return {
       nudge: message,
       mentor: randomMentor,
+      type: 'encouragement',
+      voice: voiceData,
       timestamp: new Date().toISOString()
     };
   }

@@ -63,9 +63,18 @@ let NudgesService = class NudgesService {
             "Success is not final, failure is not fatal - it's the courage to continue that counts."
         ];
         const message = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+        let voiceData = null;
+        try {
+            voiceData = await this.voiceService.generateTTS(message, randomMentor);
+        }
+        catch (e) {
+            console.log('Nudge TTS generation failed:', e);
+        }
         return {
             nudge: message,
             mentor: randomMentor,
+            type: 'encouragement',
+            voice: voiceData,
             timestamp: new Date().toISOString()
         };
     }
