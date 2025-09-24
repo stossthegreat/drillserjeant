@@ -7,11 +7,14 @@ plugins {
 flutter { source = "../.." }
 
 android {
-    namespace = "com.yourcompany.drillserjeant" // TODO: your real package
+    // TODO: set this to your real package
+    namespace = "com.yourcompany.drillserjeant"
+
+    // Plugins like path_provider_android target 36 now
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.yourcompany.drillserjeant" // TODO: your real id
+        applicationId = "com.yourcompany.drillserjeant" // TODO: real app id
         minSdk = 23
         targetSdk = 36
         versionCode = 1
@@ -19,7 +22,9 @@ android {
     }
 
     buildTypes {
+        // Ensure resource shrinking is OFF unless minify is ON
         configureEach { isShrinkResources = false }
+
         named("debug") {
             isMinifyEnabled = false
             isShrinkResources = false
@@ -52,4 +57,6 @@ android {
     kotlinOptions { jvmTarget = "17" }
 }
 
-dependencies { implementation("org.jetbrains.kotlin:kotlin-stdlib") }
+dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+}
