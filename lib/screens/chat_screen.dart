@@ -96,7 +96,6 @@ class _ChatScreenState extends State<ChatScreen> {
       // Enhanced error debugging
       print('❌ Chat error details: $e');
       print('❌ Error type: ${e.runtimeType}');
-      print('❌ API base URL: ${apiClient.getBaseUrl()}');
       
       // Surface error for debugging
       ScaffoldMessenger.of(context).showSnackBar(

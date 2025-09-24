@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'design/theme.dart';
 import 'screens/home_screen.dart';
+import 'screens/new_home_screen.dart';
 import 'screens/habits_screen.dart';
+import 'screens/new_habits_screen.dart';
 import 'screens/streaks_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/alarms_screen.dart';
@@ -17,17 +19,16 @@ import 'services/api_client.dart';
 void main() {
   // Debug: Print the environment variable and actual URL being used
   const apiUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  print('🌐 Environment API_BASE_URL: "$apiUrl"');
-  print('🌐 ApiClient baseUrl before override: "${apiClient.getBaseUrl()}"');
+  // print('🌐 Environment API_BASE_URL: "$apiUrl"');
+  // print('🌐 ApiClient baseUrl before override: "${apiClient.getBaseUrl()}"');
   
   // Override with production URL (this will be overridden by environment variable if provided)
-  if (apiUrl.isEmpty) {
-    apiClient.setBaseUrl('https://drillsergeantai-production.up.railway.app');
-  } else {
+  apiClient.setBaseUrl('https://drillsergeantai-production.up.railway.app');
+  if (apiUrl.isNotEmpty) {
     apiClient.setBaseUrl(apiUrl);
   }
   
-  print('🌐 Final ApiClient baseUrl: "${apiClient.getBaseUrl()}"');
+  // print('🌐 Final ApiClient baseUrl: "${apiClient.getBaseUrl()}"');
   
   runApp(const DrillSergeantApp());
 }
@@ -45,8 +46,15 @@ class DrillSergeantApp extends StatelessWidget {
         ShellRoute(
           builder: (context, state, child) => RootShell(child: child),
           routes: [
-            GoRoute(path: '/home', builder: (c, s) => HomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
-            GoRoute(path: '/habits', builder: (c, s) => const HabitsScreen()),
+            // New UI screens (testing)
+            GoRoute(path: '/home', builder: (c, s) => NewHomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
+            GoRoute(path: '/habits', builder: (c, s) => const NewHabitsScreen()),
+            
+            // Old screens (backup)
+            GoRoute(path: '/home-old', builder: (c, s) => HomeScreen(refreshTrigger: s.uri.queryParameters['refresh'])),
+            GoRoute(path: '/habits-old', builder: (c, s) => const HabitsScreen()),
+            
+            // Other screens unchanged
             GoRoute(path: '/habits/:id', builder: (c, s) => HabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/antihabits/:id', builder: (c, s) => AntiHabitDetailScreen(id: s.pathParameters['id'] ?? 'id')),
             GoRoute(path: '/streaks', builder: (c, s) => const StreaksScreen()),
@@ -69,26 +77,8 @@ class DrillSergeantApp extends StatelessWidget {
           child: Stack(
             children: [
               child ?? const SizedBox(),
-              // Debug banner showing API URL
-              Positioned(
-                top: 40,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'API: ${apiClient.getBaseUrl()}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
+              // Remove UI banner showing API base
+              // 'API: ${apiClient.getBaseUrl()}',
             ],
           ),
         );

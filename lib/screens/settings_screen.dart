@@ -94,7 +94,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(width: 8),
                     Text('API', style: Theme.of(context).textTheme.titleMedium),
                     const Spacer(),
-                    Text(apiClient.getBaseUrl(), style: Theme.of(context).textTheme.bodySmall),
+                    // Hide explicit API URL from UI
+                    // Text(apiClient.getBaseUrl(), style: Theme.of(context).textTheme.bodySmall),
                   ]),
                   const SizedBox(height: 12),
                   TextField(
@@ -103,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onSubmitted: (v) {
                       if (v.trim().isNotEmpty) {
                         apiClient.setBaseUrl(v.trim());
-                        Toast.show(context, 'API base set to: ${apiClient.getBaseUrl()}');
+                        Toast.show(context, 'API base updated');
                       }
                     },
                   ),
@@ -115,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           final v = _apiBaseController.text.trim();
                           if (v.isNotEmpty) {
                             apiClient.setBaseUrl(v);
-                            Toast.show(context, 'API base set to: ${apiClient.getBaseUrl()}');
+                            Toast.show(context, 'API base updated');
                             setState(() {});
                           }
                         }),

@@ -35,14 +35,25 @@ class _StreaksScreenState extends State<StreaksScreen> with TickerProviderStateM
       final achievementsData = await apiClient.getAchievements();
       final streaksData = await apiClient.getStreakSummary();
       
+      // Map dynamic achievements
+      final List<Achievement> newAchievements = _mapAchievements((achievementsData['achievements'] ?? []) as List);
+      final Set<String> unlockedNow = newAchievements.where((a) => a.unlocked).map((a) => a.id).toSet();
+      final newlyUnlocked = unlockedNow.difference(_prevUnlockedIds);
+      
       setState(() {
         // Update with real data
         overallStreak = streaksData["overall"] ?? overallStreak;
         categories = _mapCategories((streaksData["categories"] ?? []) as List);
+        achievements = newAchievements;
+        _prevUnlockedIds = unlockedNow;
         loading = false;
       });
       
-      print("✅ Achievements loaded: ${achievementsData["achievements"].length} total");
+      // Trigger celebration for any newly unlocked achievements
+      for (final id in newlyUnlocked) {
+        final ach = newAchievements.firstWhere((a) => a.id == id, orElse: () => Achievement(id: id, title: id, subtitle: '', unlocked: true));
+        _triggerAchievementUnlock(ach.title);
+      }
       
     } catch (e) {
       print("❌ Failed to load achievements: $e");
@@ -53,14 +64,11 @@ class _StreaksScreenState extends State<StreaksScreen> with TickerProviderStateM
   
   List<CategoryStreak> categories = [];
   
-  final List<Achievement> achievements = [
-    Achievement(id: 'first_week', title: 'First Week', subtitle: '7-day streak', unlocked: true, unlockedAt: DateTime.now().subtract(const Duration(days: 20))),
-    Achievement(id: 'first_month', title: 'First Month Younger', subtitle: '30-day streak', unlocked: true, unlockedAt: DateTime.now().subtract(const Duration(days: 5))),
-    Achievement(id: 'time_bandit', title: 'Time Bandit', subtitle: 'Saved 100+ hours', unlocked: true, unlockedAt: DateTime.now().subtract(const Duration(days: 10))),
-    Achievement(id: 'consistency_king', title: 'Consistency King', subtitle: '30-day habit streak', unlocked: true, unlockedAt: DateTime.now().subtract(const Duration(days: 5))),
-    Achievement(id: 'century_club', title: 'Century Club', subtitle: '100-day streak', unlocked: false),
-    Achievement(id: 'year_one', title: 'Year One', subtitle: '365-day streak', unlocked: false),
-  ];
+  // Previously static; now dynamic from API
+  List<Achievement> achievements = [];
+  
+  // Track previously unlocked to detect new unlocks
+  Set<String> _prevUnlockedIds = {};
 
   @override
   void initState() {
@@ -74,8 +82,8 @@ class _StreaksScreenState extends State<StreaksScreen> with TickerProviderStateM
       vsync: this,
     );
     
-    // Simulate checking for new achievements
-_loadAchievements();
+    // Load live achievements/streaks
+    _loadAchievements();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForNewAchievements();
     });
@@ -89,10 +97,10 @@ _loadAchievements();
   }
 
   void _checkForNewAchievements() {
-    // Simulate achievement unlock animation
+    // Keep the legacy celebration for a 30-day milestone if present
     if (overallStreak >= 30) {
       Future.delayed(const Duration(milliseconds: 500), () {
-        _triggerAchievementUnlock('First Month Younger');
+        _triggerAchievementUnlock('First Month');
       });
     }
   }
@@ -138,6 +146,19 @@ _loadAchievements();
       limited.add(c);
     }
     return limited;
+  }
+
+  List<Achievement> _mapAchievements(List apiAchievements) {
+    return apiAchievements.map((a) {
+      return Achievement(
+        id: (a['id'] ?? '').toString(),
+        title: (a['title'] ?? a['name'] ?? 'Achievement').toString(),
+        subtitle: (a['subtitle'] ?? a['description'] ?? '').toString(),
+        unlocked: (a['unlocked'] ?? a['earned'] ?? false) as bool,
+        unlockedAt: a['unlockedAt'] != null ? DateTime.tryParse(a['unlockedAt'].toString()) : null,
+        presetAudioId: a['presetAudioId']?.toString(),
+      );
+    }).toList();
   }
 
   IconData _iconForCategory(String id) {
