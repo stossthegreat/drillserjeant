@@ -17,15 +17,17 @@ export class NudgesController {
 
   @Post('chat')
   async sendChatMessage(@Body() body: any) {
-    const { message, mentor = 'drill-sergeant' } = body;
+    const { message, mentor = 'drill-sergeant', mode = 'drill-sergeant' } = body;
+    const mentorKey = mentor || mode;
     
     // Generate mentor response based on personality
-    const response = await this.nudgesService.generateChatResponse(message, mentor);
+    const response = await this.nudgesService.generateChatResponse(message, mentorKey);
     
     return {
       reply: response.message,
       mentor: response.mentor,
       voice: response.voice || null,
+      audioPresetId: response.voice || null,
       timestamp: new Date().toISOString()
     };
   }

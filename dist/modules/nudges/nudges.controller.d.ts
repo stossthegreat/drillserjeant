@@ -7,6 +7,7 @@ export declare class NudgesController {
         reply: any;
         mentor: any;
         voice: any;
+        audioPresetId: any;
         timestamp: string;
     }>;
 }
