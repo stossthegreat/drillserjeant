@@ -16,11 +16,20 @@ let BriefController = class BriefController {
     constructor(briefService) {
         this.briefService = briefService;
     }
+    async getBrief() {
+        return this.briefService.getTodaysBrief('demo-user-123');
+    }
     async getTodaysBrief() {
         return this.briefService.getTodaysBrief('demo-user-123');
     }
 };
 exports.BriefController = BriefController;
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BriefController.prototype, "getBrief", null);
 __decorate([
     (0, common_1.Get)('today'),
     __metadata("design:type", Function),

@@ -85,6 +85,20 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     }
   }
 
+  // Helper function to check if habit was completed today
+  bool _isCompletedToday(String? lastTick) {
+    if (lastTick == null) return false;
+    try {
+      final tickDate = DateTime.parse(lastTick);
+      final today = DateTime.now();
+      return tickDate.year == today.year && 
+             tickDate.month == today.month && 
+             tickDate.day == today.day;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> _loadData() async {
     setState(() => isLoading = true);
     try {
@@ -120,7 +134,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
           'id': habit['id'],
           'name': habit['title'] ?? habit['name'],
           'type': 'habit',
-          'completed': habit['status'] == 'completed',
+          'completed': _isCompletedToday(habit['lastTick']),
           'streak': habit['streak'] ?? 0,
           'color': habit['color'] ?? 'emerald',
           'reminderEnabled': habit['reminderEnabled'] ?? false,

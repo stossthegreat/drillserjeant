@@ -5,6 +5,11 @@ import { BriefService } from './brief.service';
 export class BriefController {
   constructor(private readonly briefService: BriefService) {}
 
+  @Get()
+  async getBrief() {
+    return this.briefService.getTodaysBrief('demo-user-123');
+  }
+
   @Get('today')
   async getTodaysBrief() {
     return this.briefService.getTodaysBrief('demo-user-123');
