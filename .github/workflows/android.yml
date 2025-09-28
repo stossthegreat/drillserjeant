@@ -38,7 +38,12 @@ jobs:
         run: |
           set -uxo pipefail
           flutter clean
-          flutter build apk --release --dart-define=API_BASE_URL=${API_BASE_URL} -v || true
+          DEFINE=""
+          if [ -n "${API_BASE_URL}" ] && ! echo "${API_BASE_URL}" | grep -q "example.com"; then
+            DEFINE="--dart-define=API_BASE_URL=${API_BASE_URL}"
+          fi
+          echo "Using DEFINE: ${DEFINE}"
+          flutter build apk --release ${DEFINE} -v || true
           echo "Listing build outputs (build/app & android/app):" || true
           ls -R build/app/outputs || true
           ls -R android/app/build/outputs || true
