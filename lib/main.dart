@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'design/theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/new_home_screen.dart';
@@ -40,6 +41,14 @@ class DrillSergeantApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = GoRouter(
       initialLocation: '/home',
+      redirect: (context, state) async {
+        final prefs = await SharedPreferences.getInstance();
+        final done = prefs.getBool('onboarding_done') ?? false;
+        final loggingToOnboarding = state.matchedLocation == '/onboarding';
+        if (!done && !loggingToOnboarding) return '/onboarding';
+        if (done && loggingToOnboarding) return '/home';
+        return null;
+      },
       routes: [
         GoRoute(path: '/design', builder: (c, s) => const DesignGallery()),
         GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
