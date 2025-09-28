@@ -207,6 +207,19 @@ class ApiClient {
     }
   }
 
+  // ============ NUDGES ============
+  Future<Map<String, dynamic>> getNudge() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/v1/nudge'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to get nudge: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ============ VOICE ============
   Future<Map<String, dynamic>> getVoicePreset(String presetId) async {
     final response = await http.get(
@@ -322,6 +335,20 @@ class ApiClient {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to record slip: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  // ============ TASKS ============
+  Future<Map<String, dynamic>> completeTask(String taskId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/v1/tasks/$taskId/complete'),
+      headers: _headers,
+      body: json.encode({}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to complete task: ${response.statusCode} ${response.body}');
     }
   }
 

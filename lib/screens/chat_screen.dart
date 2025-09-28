@@ -120,8 +120,8 @@ class _ChatScreenState extends State<ChatScreen> {
         return 'strict';
       case 'marcus_aurelius':
         return 'light';
-      case 'miyamoto_musashi':
-        return 'strict';
+      case 'buddha':
+        return 'balanced';
       case 'confucius':
         return 'balanced';
       case 'abraham_lincoln':

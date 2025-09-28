@@ -32,8 +32,8 @@ class LegendaryMentors {
     name: 'Drill Sergeant',
     title: 'The Iron Will',
     description: 'Military precision, tough love, results-focused',
-    primaryColor: Color(0xFF1A365D), // Steel Blue
-    accentColor: Color(0xFF38A169), // Military Green
+    primaryColor: Color(0xFF1A365D),
+    accentColor: Color(0xFF38A169),
     avatarAsset: 'assets/avatars/drill_sergeant.png',
     signature: 'NO EXCUSES, RECRUIT!',
     philosophy: 'Discipline equals freedom. Push through the pain.',
@@ -50,8 +50,8 @@ class LegendaryMentors {
     name: 'Marcus Aurelius',
     title: 'The Stoic Emperor',
     description: 'Philosophical wisdom, inner strength, rational thinking',
-    primaryColor: Color(0xFF553C9A), // Deep Purple
-    accentColor: Color(0xFFD69E2E), // Imperial Gold
+    primaryColor: Color(0xFF553C9A),
+    accentColor: Color(0xFFD69E2E),
     avatarAsset: 'assets/avatars/marcus_aurelius.png',
     signature: 'The universe is transformation.',
     philosophy: 'You have power over your mind - not outside events. Realize this, and you will find strength.',
@@ -63,21 +63,21 @@ class LegendaryMentors {
     ],
   );
 
-  static const miyamotoMusashi = Mentor(
-    id: 'miyamoto_musashi',
-    name: 'Miyamoto Musashi',
-    title: 'The Way of the Sword',
-    description: 'Strategic thinking, mastery through practice, warrior focus',
-    primaryColor: Color(0xFF742A2A), // Deep Red
-    accentColor: Color(0xFF1A202C), // Warrior Black
-    avatarAsset: 'assets/avatars/miyamoto_musashi.png',
-    signature: 'The way is in training.',
-    philosophy: 'Today I will win over myself of yesterday.',
+  static const buddha = Mentor(
+    id: 'buddha',
+    name: 'Buddha',
+    title: 'The Calm Mind',
+    description: 'Mindfulness, compassion, equanimity',
+    primaryColor: Color(0xFF1D4ED8),
+    accentColor: Color(0xFF22C55E),
+    avatarAsset: 'assets/avatars/buddha.png',
+    signature: 'Be where your feet are.',
+    philosophy: 'Peace comes from within. Do not seek it without.',
     quickResponses: [
-      "Cut through hesitation.",
-      "Practice makes perfect.",
-      "Strategy over strength.",
-      "One strike, one kill."
+      "Breathe deeply; act clearly.",
+      "One step, one moment.",
+      "Let go, begin now.",
+      "Compassion with discipline."
     ],
   );
 
@@ -86,8 +86,8 @@ class LegendaryMentors {
     name: 'Confucius',
     title: 'The Great Teacher',
     description: 'Harmony, social wisdom, ethical development',
-    primaryColor: Color(0xFFDD6B20), // Warm Orange
-    accentColor: Color(0xFF38A169), // Jade Green
+    primaryColor: Color(0xFFDD6B20),
+    accentColor: Color(0xFF38A169),
     avatarAsset: 'assets/avatars/confucius.png',
     signature: 'Learning without thinking is useless.',
     philosophy: 'The man who moves a mountain begins by carrying away small stones.',
@@ -104,8 +104,8 @@ class LegendaryMentors {
     name: 'Abraham Lincoln',
     title: 'The Honest Leader',
     description: 'Perseverance, moral clarity, humble strength',
-    primaryColor: Color(0xFF2D3748), // Deep Navy
-    accentColor: Color(0xFF8B4513), // Honest Brown
+    primaryColor: Color(0xFF2D3748),
+    accentColor: Color(0xFF8B4513),
     avatarAsset: 'assets/avatars/abraham_lincoln.png',
     signature: 'I am a slow walker, but I never walk back.',
     philosophy: 'Nearly all men can stand adversity, but if you want to test a man\'s character, give him power.',
@@ -120,7 +120,7 @@ class LegendaryMentors {
   static List<Mentor> get all => [
     drillSergeant,
     marcusAurelius,
-    miyamotoMusashi,
+    buddha,
     confucius,
     abrahamLincoln,
   ];
