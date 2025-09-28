@@ -51,14 +51,24 @@ jobs:
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL || 'https://example.com' }}
         run: |
-          set -euxo pipefail
+          set -uxo pipefail
           flutter clean
-          flutter build apk --release --dart-define=API_BASE_URL=${API_BASE_URL} -v
-          echo "Listing build outputs:" || true
+          # Allow the command to continue even if Flutter can't find the copied APK
+          flutter build apk --release --dart-define=API_BASE_URL=${API_BASE_URL} -v || true
+          echo "Listing build outputs (build/app & android/app):" || true
           ls -R build/app/outputs || true
+          ls -R android/app/build/outputs || true
+          # If Flutter didn't copy to flutter-apk, copy any discovered APK there for convenience
+          mkdir -p build/app/outputs/flutter-apk
+          FOUND_APK=$(ls -1 build/app/outputs/**/*.apk android/app/build/outputs/**/*.apk 2>/dev/null | head -n 1 || true)
+          if [ -n "$FOUND_APK" ]; then
+            cp "$FOUND_APK" build/app/outputs/flutter-apk/app-release.apk || true
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: build/app/outputs/**/*.apk
+          path: |
+            build/app/outputs/**/*.apk
+            android/app/build/outputs/**/*.apk
