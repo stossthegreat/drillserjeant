@@ -33,7 +33,14 @@ jobs:
           if [ -f android/gradlew ]; then chmod +x android/gradlew; fi
 
       - name: Build APK
-        run: flutter build apk --release --dart-define=API_BASE_URL=${{ secrets.API_BASE_URL }}
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: |
+          set -euxo pipefail
+          flutter clean
+          flutter build apk --release --dart-define=API_BASE_URL=${API_BASE_URL} -v
+          echo "Listing build outputs:" || true
+          ls -R build/app/outputs || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
