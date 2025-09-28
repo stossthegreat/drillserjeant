@@ -37,9 +37,19 @@ export class BriefService {
     let habits = await this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
     habits = habits.filter(h => this.isScheduledToday(h.schedule));
 
+    // Pass through reminder fields if encoded inside schedule json
+    const enrichedHabits = habits.map(h => {
+      const s: any = typeof h.schedule === 'string' ? safeJsonParse(h.schedule) : (h.schedule || {});
+      return {
+        ...h,
+        reminderEnabled: s.reminderEnabled ?? false,
+        reminderTime: s.reminderTime ?? null,
+      };
+    });
+
     return {
       date: start.toISOString().slice(0, 10),
-      habits,
+      habits: enrichedHabits,
       tasks: [],
       nudge: nudge?.payload || null,
     };
@@ -64,4 +74,8 @@ export class BriefService {
       return true;
     }
   }
+}
+
+function safeJsonParse(v: any) {
+  try { return JSON.parse(v); } catch { return {}; }
 } 
