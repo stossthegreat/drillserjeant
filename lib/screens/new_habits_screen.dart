@@ -133,24 +133,27 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
     if (data['name'].toString().trim().isEmpty) return;
     
     try {
+      final schedule = {
+        if ((data['startDate'] ?? '').toString().isNotEmpty) 'from': data['startDate'],
+        if ((data['endDate'] ?? '').toString().isNotEmpty) 'to': data['endDate'],
+        'kind': (data['frequency'] == 'daily') ? 'alldays' : (data['frequency'] == 'weekdays') ? 'weekdays' : 'everyN',
+        if (data['frequency'] == 'everyN') 'everyN': data['everyN'],
+        'reminderEnabled': data['reminderOn'] ?? false,
+        'reminderTime': data['reminderTime'] ?? '08:00',
+      };
+
       final itemData = {
-        'name': data['name'].toString().trim(),
-        'category': data['category'].toString().trim(),
+        'title': data['name'].toString().trim(),
         'type': data['type'],
         'difficulty': data['intensity'],
         'color': data['color'],
-        'startDate': data['startDate'],
-        'endDate': data['endDate'],
-        'frequency': data['frequency'],
-        'reminderEnabled': data['reminderOn'],
-        'reminderTime': data['reminderTime'],
+        'schedule': schedule,
       };
 
       if (isEditing && data['id'] != null) {
-        // Update existing item (would need update endpoint)
+        // Update existing item (TODO: add update endpoint)
         print('Updating item: ${data['id']}');
       } else {
-        // Create new item
         await apiClient.createHabit(itemData);
       }
       
@@ -158,7 +161,6 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
       _loadData();
       HapticFeedback.selectionClick();
       
-      // Navigate back to Home screen after creating habit
       if (mounted && !isEditing) {
         context.go('/home?refresh=${DateTime.now().millisecondsSinceEpoch}');
       }
@@ -170,8 +172,7 @@ class _NewHabitsScreenState extends State<NewHabitsScreen> with TickerProviderSt
 
   Future<void> _deleteItem(String itemId) async {
     try {
-      // Would need delete endpoint
-      print('Deleting item: $itemId');
+      await apiClient.deleteHabit(itemId);
       _loadData();
       HapticFeedback.heavyImpact();
     } catch (e) {

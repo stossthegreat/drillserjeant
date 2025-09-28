@@ -69,6 +69,9 @@ function normalizeSchedule(body: any) {
   const startDate = body.startDate || body.from;
   const endDate = body.endDate || body.to;
   const days = Array.isArray(body.days) ? body.days : undefined;
+  const everyN = Number(body.everyN || body.n || 0) || undefined;
+  const reminderEnabled = body.reminderEnabled ?? body.reminderOn ?? undefined;
+  const reminderTime = body.reminderTime ?? undefined;
 
   const schedule: any = {};
   if (startDate) schedule.from = startDate;
@@ -87,10 +90,17 @@ function normalizeSchedule(body: any) {
       schedule.kind = 'custom';
       schedule.days = (days || []).map((d: any) => Number(d)).filter((n: number) => n >= 1 && n <= 7);
       break;
+    case 'everyN':
+      schedule.kind = 'everyN';
+      if (everyN) schedule.everyN = everyN;
+      break;
     default:
       schedule.kind = frequency;
       break;
   }
+
+  if (typeof reminderEnabled === 'boolean') schedule.reminderEnabled = reminderEnabled;
+  if (typeof reminderTime === 'string') schedule.reminderTime = reminderTime;
 
   return schedule;
 } 

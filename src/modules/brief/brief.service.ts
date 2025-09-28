@@ -59,6 +59,7 @@ export class BriefService {
     try {
       const s = typeof schedule === 'string' ? JSON.parse(schedule) : (schedule || {});
       const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const dayIdx = ((today.getDay() + 6) % 7) + 1; // 1=Mon .. 7=Sun
       const from = s.from ? new Date(s.from) : null;
       const to = s.to ? new Date(s.to) : null;
@@ -67,6 +68,12 @@ export class BriefService {
       const kind = (s.kind || s.type || '').toString();
       if (kind === 'alldays') return true;
       if (kind === 'weekdays') return dayIdx <= 5;
+      if (kind === 'everyN') {
+        const n = Number(s.everyN || s.n || 1);
+        const anchor = from ? new Date(from.getFullYear(), from.getMonth(), from.getDate()) : todayStart;
+        const diffDays = Math.floor((todayStart.getTime() - anchor.getTime()) / (24 * 60 * 60 * 1000));
+        return diffDays >= 0 && n >= 1 && (diffDays % n === 0);
+      }
       const days: number[] = Array.isArray(s.days) ? s.days.map((d:any)=>Number(d)).filter((n:any)=>n>=1&&n<=7) : [];
       if (days.length === 0 && !kind) return true; // no schedule means always
       return days.includes(dayIdx);

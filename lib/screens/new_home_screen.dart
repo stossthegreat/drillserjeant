@@ -95,11 +95,11 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   bool _isCompletedToday(String? lastTick) {
     if (lastTick == null) return false;
     try {
-      final tickDate = DateTime.parse(lastTick);
-      final today = DateTime.now();
-      return tickDate.year == today.year && 
-             tickDate.month == today.month && 
-             tickDate.day == today.day;
+      final tickDate = DateTime.parse(lastTick).toUtc();
+      final todayUtc = DateTime.now().toUtc();
+      return tickDate.year == todayUtc.year &&
+          tickDate.month == todayUtc.month &&
+          tickDate.day == todayUtc.day;
     } catch (e) {
       return false;
     }

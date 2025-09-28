@@ -188,6 +188,16 @@ class ApiClient {
     }
   }
 
+  Future<void> deleteHabit(String habitId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/v1/habits/$habitId'),
+      headers: _headers,
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete habit: ${response.statusCode} ${response.body}');
+    }
+  }
+
   // ============ CHAT ============
   Future<Map<String, dynamic>> sendChatMessage(String message, {String mode = 'balanced', bool includeVoice = true}) async {
     final response = await http.post(
