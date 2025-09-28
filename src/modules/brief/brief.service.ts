@@ -34,7 +34,8 @@ export class BriefService {
       await this.queues.enqueueNotification({ userId, text: gen.text, voiceUrl: gen.voiceUrl, kind: 'primer', mentor: gen.mentor });
     }
 
-    const habits = await this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
+    let habits = await this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
+    habits = habits.filter(h => this.isScheduledToday(h.schedule));
 
     return {
       date: start.toISOString().slice(0, 10),
@@ -42,5 +43,25 @@ export class BriefService {
       tasks: [],
       nudge: nudge?.payload || null,
     };
+  }
+
+  private isScheduledToday(schedule: any): boolean {
+    try {
+      const s = typeof schedule === 'string' ? JSON.parse(schedule) : (schedule || {});
+      const today = new Date();
+      const dayIdx = ((today.getDay() + 6) % 7) + 1; // 1=Mon .. 7=Sun
+      const from = s.from ? new Date(s.from) : null;
+      const to = s.to ? new Date(s.to) : null;
+      if (from && today < new Date(from.setHours(0,0,0,0))) return false;
+      if (to && today > new Date(to.setHours(23,59,59,999))) return false;
+      const kind = (s.kind || s.type || '').toString();
+      if (kind === 'alldays') return true;
+      if (kind === 'weekdays') return dayIdx <= 5;
+      const days: number[] = Array.isArray(s.days) ? s.days.map((d:any)=>Number(d)).filter((n:any)=>n>=1&&n<=7) : [];
+      if (days.length === 0 && !kind) return true; // no schedule means always
+      return days.includes(dayIdx);
+    } catch {
+      return true;
+    }
   }
 } 
