@@ -9,6 +9,8 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { EventsModule } from './modules/events/events.module';
 import { BriefModule } from './modules/brief/brief.module';
 import { NudgesModule } from './modules/nudges/nudges.module';
+import { HabitsModule } from './modules/habits/habits.module';
+import { AlarmsModule } from './modules/alarms/alarms.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { NudgesModule } from './modules/nudges/nudges.module';
     EventsModule,
     BriefModule,
     NudgesModule,
+    HabitsModule,
+    AlarmsModule,
   ],
   controllers: [],
   providers: [],
