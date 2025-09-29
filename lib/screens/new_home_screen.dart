@@ -42,6 +42,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
 
   // Date helpers
   String formatDate(DateTime date) => date.toIso8601String().split('T')[0];
+  bool _isSameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
   
   List<DateTime> get weekDates {
     final startOfWeek = selectedDate.subtract(Duration(days: selectedDate.weekday % 7));
@@ -91,15 +92,12 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     }
   }
 
-  // Helper function to check if habit was completed today
-  bool _isCompletedToday(String? lastTick) {
-    if (lastTick == null) return false;
+  // Check if habit was completed on a specific date using its lastTick
+  bool _isCompletedOnDate(String? lastTick, DateTime date) {
+    if (lastTick == null || lastTick.isEmpty) return false;
     try {
-      final tickDate = DateTime.parse(lastTick).toUtc();
-      final todayUtc = DateTime.now().toUtc();
-      return tickDate.year == todayUtc.year &&
-          tickDate.month == todayUtc.month &&
-          tickDate.day == todayUtc.day;
+      final tickDate = DateTime.parse(lastTick);
+      return _isSameDay(tickDate, date);
     } catch (e) {
       return false;
     }
@@ -140,7 +138,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
           'id': habit['id'],
           'name': habit['title'] ?? habit['name'],
           'type': 'habit',
-          'completed': _isCompletedToday(habit['lastTick']),
+          'lastTick': habit['lastTick'],
           'streak': habit['streak'] ?? 0,
           'color': habit['color'] ?? 'emerald',
           'reminderEnabled': habit['reminderEnabled'] ?? false,
@@ -249,6 +247,12 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   Future<void> _toggleCompletion(String itemId, String itemType, DateTime date) async {
     final dateStr = formatDate(date);
     try {
+      // Only allow ticking for today to avoid visual mismatch for past/future days
+      final now = DateTime.now();
+      if (!_isSameDay(date, now)) {
+        Toast.show(context, 'You can only tick today');
+        return;
+      }
       // Use existing API endpoints
       if (itemType == 'habit') {
         await apiClient.tickHabit(itemId, idempotencyKey: '${itemId}_$dateStr');
@@ -261,6 +265,150 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     } catch (e) {
       print('❌ Error toggling completion: $e');
     }
+  }
+
+  void _showHabitOptions(Map<String, dynamic> item) {
+    final itemName = (item['name'] ?? item['title'] ?? 'Item').toString();
+    final itemType = (item['type'] ?? 'habit').toString();
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1a1f1e),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              itemName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            _buildOptionButton(
+              'Edit Schedule',
+              Icons.schedule,
+              () {
+                Navigator.pop(context);
+                _editHabitSchedule(item);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionButton(
+              'View Stats',
+              Icons.bar_chart,
+              () {
+                Navigator.pop(context);
+                // TODO: Navigate to habit stats
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionButton(
+              'Delete ${itemType == 'task' ? 'Task' : 'Habit'}',
+              Icons.delete,
+              () {
+                Navigator.pop(context);
+                _confirmDeleteHabit(item);
+              },
+              color: const Color(0xFFE11D48),
+            ),
+            const SizedBox(height: 12),
+            _buildOptionButton(
+              'Cancel',
+              Icons.close,
+              () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionButton(String label, IconData icon, VoidCallback onTap, {Color? color}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: (color ?? Colors.white).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: (color ?? Colors.white).withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color ?? Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: color ?? Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteHabit(Map<String, dynamic> item) {
+    final itemName = (item['name'] ?? item['title'] ?? 'Item').toString();
+    final itemType = (item['type'] ?? 'habit').toString();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1a1f1e),
+        title: Text(
+          'Delete ${itemType == 'task' ? 'Task' : 'Habit'}?',
+          style: const TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to delete "$itemName"? This action cannot be undone.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteHabit(item['id'].toString());
+            },
+            child: const Text('Delete', style: TextStyle(color: Color(0xFFE11D48))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteHabit(String habitId) async {
+    try {
+      await apiClient.deleteHabit(habitId);
+      _loadData(); // Refresh the data
+      Toast.show(context, 'Habit deleted successfully');
+      HapticFeedback.heavyImpact();
+    } catch (e) {
+      print('❌ Error deleting habit: $e');
+      Toast.show(context, 'Failed to delete habit: $e');
+    }
+  }
+
+  void _editHabitSchedule(Map<String, dynamic> item) {
+    // TODO: Navigate to edit screen or show schedule picker
+    Toast.show(context, 'Schedule editing coming soon!');
   }
 
   Widget _buildWeekStrip() {
@@ -522,7 +670,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
           ),
           const SizedBox(height: 16),
           
-          // Today's Missions
+          // Today\'s Missions
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),
@@ -584,7 +732,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   }
 
   String _getMissionSummary() {
-    final completed = todayItems.where((item) => item['completed'] == true).length;
+    final completed = todayItems.where((item) => _isCompletedOnDate(item['lastTick']?.toString(), selectedDate) || item['completed'] == true).length;
     if (completed == 0 && todayItems.isEmpty) {
       return 'No missions for today 🎉';
     }
@@ -628,7 +776,7 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
   }
 
   Widget _buildTodayItemCard(Map<String, dynamic> item) {
-    final isCompleted = item['completed'] == true;
+    final isCompleted = _isCompletedOnDate(item['lastTick']?.toString(), selectedDate) || item['completed'] == true;
     final itemName = (item['name'] ?? item['title'] ?? 'Item').toString();
     final itemType = (item['type'] ?? 'habit').toString();
     final itemColor = _getColorForItem(item);
@@ -637,13 +785,20 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: 1,
-      child: InkWell(
+      child: GestureDetector(
         onTap: () async {
           try {
+            // Block ticking for non-today dates
+            if (!_isSameDay(selectedDate, DateTime.now())) {
+              Toast.show(context, 'You can only tick today');
+              return;
+            }
             // Optimistic UI update
             setState(() {
               final idx = todayItems.indexWhere((it) => (it['id']?.toString() ?? '') == (item['id']?.toString() ?? ''));
-              if (idx >= 0) todayItems[idx]['completed'] = true;
+              if (idx >= 0) {
+                todayItems[idx]['lastTick'] = DateTime.now().toIso8601String();
+              }
             });
             HapticFeedback.selectionClick();
             await _toggleCompletion(item['id'].toString(), itemType, selectedDate);
@@ -652,7 +807,9 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
             Toast.show(context, 'Failed to complete: $e');
           }
         },
-        borderRadius: BorderRadius.circular(16),
+        onLongPress: () {
+          _showHabitOptions(item);
+        },
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
@@ -713,9 +870,18 @@ class _NewHomeScreenState extends State<NewHomeScreen> with TickerProviderStateM
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      itemType == 'task' ? 'Tap to complete task' : 'Tap to tick today',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    Row(
+                      children: [
+                        Text(
+                          itemType == 'task' ? 'Tap to complete task' : 'Tap to tick today',
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const Spacer(),
+                        Text(
+                          'Hold for options',
+                          style: const TextStyle(color: Colors.white40, fontSize: 10),
+                        ),
+                      ],
                     ),
                   ],
                 ),

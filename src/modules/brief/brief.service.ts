@@ -35,7 +35,7 @@ export class BriefService {
     }
 
     let habits = await this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
-    habits = habits.filter(h => this.isScheduledToday(h.schedule));
+    habits = habits.filter(h => this.isScheduledToday(h.schedule, h.createdAt));
 
     // Pass through reminder fields if encoded inside schedule json
     const enrichedHabits = habits.map(h => {
@@ -55,25 +55,35 @@ export class BriefService {
     };
   }
 
-  private isScheduledToday(schedule: any): boolean {
+  private isScheduledToday(schedule: any, createdAt?: Date): boolean {
     try {
       const s = typeof schedule === 'string' ? JSON.parse(schedule) : (schedule || {});
       const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const dayIdx = ((today.getDay() + 6) % 7) + 1; // 1=Mon .. 7=Sun
       const from = s.from ? new Date(s.from) : null;
       const to = s.to ? new Date(s.to) : null;
       if (from && today < new Date(from.setHours(0,0,0,0))) return false;
       if (to && today > new Date(to.setHours(23,59,59,999))) return false;
+
       const kind = (s.kind || s.type || '').toString();
       if (kind === 'alldays') return true;
       if (kind === 'weekdays') return dayIdx <= 5;
+
+      // everyN cadence from start date
       if (kind === 'everyN') {
-        const n = Number(s.everyN || s.n || 1);
-        const anchor = from ? new Date(from.getFullYear(), from.getMonth(), from.getDate()) : todayStart;
-        const diffDays = Math.floor((todayStart.getTime() - anchor.getTime()) / (24 * 60 * 60 * 1000));
-        return diffDays >= 0 && n >= 1 && (diffDays % n === 0);
+        const n = Number(s.n || s.everyN || 0);
+        if (!n || n <= 0) return true; // fallback always
+        const anchor = from ? new Date(from) : (createdAt ? new Date(createdAt) : null);
+        if (!anchor) return true;
+        const anchorMid = new Date(anchor);
+        anchorMid.setHours(0,0,0,0);
+        const todayMid = new Date(today);
+        todayMid.setHours(0,0,0,0);
+        const diffDays = Math.floor((todayMid.getTime() - anchorMid.getTime()) / (1000*60*60*24));
+        return diffDays % n === 0 && diffDays >= 0;
       }
+
+      // custom days of week
       const days: number[] = Array.isArray(s.days) ? s.days.map((d:any)=>Number(d)).filter((n:any)=>n>=1&&n<=7) : [];
       if (days.length === 0 && !kind) return true; // no schedule means always
       return days.includes(dayIdx);

@@ -12,4 +12,5 @@ export declare class BriefService {
         tasks: any[];
         nudge: any;
     }>;
+    private isScheduledToday;
 }

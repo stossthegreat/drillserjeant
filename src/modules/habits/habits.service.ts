@@ -70,8 +70,6 @@ function normalizeSchedule(body: any) {
   const endDate = body.endDate || body.to;
   const days = Array.isArray(body.days) ? body.days : undefined;
   const everyN = Number(body.everyN || body.n || 0) || undefined;
-  const reminderEnabled = body.reminderEnabled ?? body.reminderOn ?? undefined;
-  const reminderTime = body.reminderTime ?? undefined;
 
   const schedule: any = {};
   if (startDate) schedule.from = startDate;
@@ -92,15 +90,16 @@ function normalizeSchedule(body: any) {
       break;
     case 'everyN':
       schedule.kind = 'everyN';
-      if (everyN) schedule.everyN = everyN;
+      if (everyN && everyN > 0) schedule.n = everyN;
       break;
     default:
       schedule.kind = frequency;
       break;
   }
 
-  if (typeof reminderEnabled === 'boolean') schedule.reminderEnabled = reminderEnabled;
-  if (typeof reminderTime === 'string') schedule.reminderTime = reminderTime;
+  // Pass-through reminder fields if present on body
+  if (typeof body.reminderEnabled !== 'undefined') schedule.reminderEnabled = !!body.reminderEnabled;
+  if (body.reminderTime) schedule.reminderTime = body.reminderTime;
 
   return schedule;
 } 

@@ -18,6 +18,8 @@ const reports_module_1 = require("./modules/reports/reports.module");
 const events_module_1 = require("./modules/events/events.module");
 const brief_module_1 = require("./modules/brief/brief.module");
 const nudges_module_1 = require("./modules/nudges/nudges.module");
+const habits_module_1 = require("./modules/habits/habits.module");
+const alarms_module_1 = require("./modules/alarms/alarms.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +36,8 @@ exports.AppModule = AppModule = __decorate([
             events_module_1.EventsModule,
             brief_module_1.BriefModule,
             nudges_module_1.NudgesModule,
+            habits_module_1.HabitsModule,
+            alarms_module_1.AlarmsModule,
         ],
         controllers: [],
         providers: [],

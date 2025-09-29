@@ -24,9 +24,17 @@ let HabitsController = class HabitsController {
         const userId = req.user?.id || 'demo-user-123';
         return this.habits.list(userId);
     }
+    async create(req, body) {
+        const userId = req.user?.id || 'demo-user-123';
+        return this.habits.create(userId, body);
+    }
     async tick(req, id) {
         const userId = req.user?.id || 'demo-user-123';
         return this.habits.tick(userId, id);
+    }
+    async delete(req, id) {
+        const userId = req.user?.id || 'demo-user-123';
+        return this.habits.delete(userId, id);
     }
 };
 exports.HabitsController = HabitsController;
@@ -39,6 +47,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], HabitsController.prototype, "list", null);
 __decorate([
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a habit' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], HabitsController.prototype, "create", null);
+__decorate([
     (0, common_1.Post)(':id/tick'),
     (0, swagger_1.ApiOperation)({ summary: 'Tick habit for today (idempotent)' }),
     __param(0, (0, common_1.Req)()),
@@ -47,6 +64,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], HabitsController.prototype, "tick", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a habit' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], HabitsController.prototype, "delete", null);
 exports.HabitsController = HabitsController = __decorate([
     (0, swagger_1.ApiTags)('Habits'),
     (0, common_1.Controller)('v1/habits'),
