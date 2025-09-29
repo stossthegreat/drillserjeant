@@ -1,86 +1,104 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class HabitsService {
-  private habits = [
-    { 
-      id: 'habit-1', 
-      userId: 'demo-user-123', 
-      title: 'Morning Workout', 
-      streak: 7, 
-      schedule: { time: '07:00', days: ['mon', 'tue', 'wed', 'thu', 'fri'] }, 
-      lastTick: new Date().toISOString(),
-      context: { difficulty: 2, category: 'fitness', lifeDays: 0.5 },
-      color: 'emerald',
-      reminderEnabled: true,
-      reminderTime: '07:00',
-      createdAt: '2024-01-01T00:00:00Z'
-    },
-    { 
-      id: 'habit-2', 
-      userId: 'demo-user-123', 
-      title: 'Read 30 Minutes', 
-      streak: 30, 
-      schedule: { time: '20:00', days: ['daily'] }, 
-      lastTick: new Date().toISOString(),
-      context: { difficulty: 1, category: 'learning', lifeDays: 0.3 },
-      color: 'sky',
-      reminderEnabled: true,
-      reminderTime: '20:00',
-      createdAt: '2024-01-01T00:00:00Z'
-    }
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
   async list(userId: string) {
-    return this.habits.filter(habit => habit.userId === userId);
+    return this.prisma.habit.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } });
   }
 
-  async create(userId: string, habitData: any) {
-    const newHabit = {
-      id: `habit-${Date.now()}`,
-      userId,
-      title: habitData.title || habitData.name,
-      streak: 0,
-      schedule: habitData.schedule || { type: 'daily' },
-      lastTick: null,
-      context: habitData.context || { difficulty: 2 },
-      color: habitData.color || 'emerald',
-      reminderEnabled: habitData.reminderEnabled || false,
-      reminderTime: habitData.reminderTime || '08:00',
-      createdAt: new Date().toISOString(),
-      ...habitData
-    };
-    
-    this.habits.push(newHabit);
-    return newHabit;
+  async create(userId: string, body: any) {
+    const title = (body.title || body.name || '').toString().trim();
+    if (!title) {
+      throw new Error('title is required');
+    }
+
+    const scheduleInput = body.schedule || normalizeSchedule(body);
+
+    const created = await this.prisma.habit.create({
+      data: {
+        userId,
+        title,
+        schedule: scheduleInput,
+      },
+    });
+    return created;
   }
 
-  async tick(id: string, userId: string) {
-    const habit = this.habits.find(h => h.id === id && h.userId === userId);
-    if (!habit) {
+  async tick(userId: string, habitId: string) {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit || habit.userId !== userId) {
       throw new Error('Habit not found');
     }
-    
-    const today = new Date().toDateString();
-    const lastTickDate = habit.lastTick ? new Date(habit.lastTick).toDateString() : null;
-    
-    if (lastTickDate === today) {
-      return habit; // Already ticked today
+
+    const now = new Date();
+    const last = habit.lastTick ? new Date(habit.lastTick) : null;
+    const alreadyToday = !!last &&
+      last.getFullYear() === now.getFullYear() &&
+      last.getMonth() === now.getMonth() &&
+      last.getDate() === now.getDate();
+
+    if (alreadyToday) {
+      return { ok: true, idempotent: true, streak: habit.streak, timestamp: habit.lastTick };
     }
-    
-    habit.lastTick = new Date().toISOString();
-    habit.streak = (habit.streak || 0) + 1;
-    
-    return habit;
+
+    const updated = await this.prisma.habit.update({
+      where: { id: habitId },
+      data: { lastTick: now, streak: { increment: 1 } },
+    });
+
+    await this.prisma.event.create({ data: { userId, type: 'habit_success', payload: { habitId } } });
+    return { ok: true, idempotent: false, streak: updated.streak, timestamp: updated.lastTick };
   }
 
-  async update(id: string, userId: string, updateData: any) {
-    const habit = this.habits.find(h => h.id === id && h.userId === userId);
-    if (!habit) {
+  async delete(userId: string, habitId: string) {
+    const habit = await this.prisma.habit.findUnique({ where: { id: habitId } });
+    if (!habit || habit.userId !== userId) {
       throw new Error('Habit not found');
     }
-    
-    Object.assign(habit, updateData);
-    return habit;
+    await this.prisma.habit.delete({ where: { id: habitId } });
+    await this.prisma.event.create({ data: { userId, type: 'habit_deleted', payload: { habitId } } });
+    return { ok: true };
   }
+}
+
+function normalizeSchedule(body: any) {
+  const frequency = (body.frequency || body.type || body.kind || 'daily').toString();
+  const startDate = body.startDate || body.from;
+  const endDate = body.endDate || body.to;
+  const days = Array.isArray(body.days) ? body.days : undefined;
+  const everyN = Number(body.everyN || body.n || 0) || undefined;
+
+  const schedule: any = {};
+  if (startDate) schedule.from = startDate;
+  if (endDate) schedule.to = endDate;
+
+  switch (frequency) {
+    case 'alldays':
+    case 'all':
+    case 'daily':
+      schedule.kind = 'alldays';
+      break;
+    case 'weekdays':
+      schedule.kind = 'weekdays';
+      break;
+    case 'custom':
+      schedule.kind = 'custom';
+      schedule.days = (days || []).map((d: any) => Number(d)).filter((n: number) => n >= 1 && n <= 7);
+      break;
+    case 'everyN':
+      schedule.kind = 'everyN';
+      if (everyN && everyN > 0) schedule.n = everyN;
+      break;
+    default:
+      schedule.kind = frequency;
+      break;
+  }
+
+  if (typeof body.reminderEnabled !== 'undefined') schedule.reminderEnabled = !!body.reminderEnabled;
+  if (body.reminderTime) schedule.reminderTime = body.reminderTime;
+
+  return schedule;
 } 
