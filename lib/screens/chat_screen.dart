@@ -208,9 +208,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: MentorSelector(
-                mentors: LegendaryMentors.all,
-                selected: selectedMentor,
-                onChanged: _onMentorChanged,
+                selectedMentor: selectedMentor,
+                onMentorChanged: _onMentorChanged,
               ),
             ),
             const SizedBox(height: 12),
